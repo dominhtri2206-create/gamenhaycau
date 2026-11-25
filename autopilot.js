@@ -15,12 +15,12 @@
 
   // Exact frame-by-frame trajectory check: if we flap right now, will the upward arc hit any top pipe?
   function isFlapSafeFromTop(bird, pipes, speed, safetyMargin) {
-    const hitR = bird.radius - 3; // 14
+    const hitR = bird.radius - 5; // 12
     let y = bird.y;
-    let vy = -8.1;
+    let vy = -7.0;
 
-    for (let t = 1; t <= 26; t++) {
-      vy = Math.min(11.5, vy + 0.44);
+    for (let t = 1; t <= 28; t++) {
+      vy = Math.min(8.5, vy + 0.33);
       y += vy;
 
       if (y - bird.radius < 2) return false;
@@ -32,24 +32,22 @@
         if (px + p.width < bird.x - hitR) continue;
 
         const topH = p.isMoving
-          ? p.baseTop + Math.sin(p.movePhase + 0.035 * t) * p.moveAmp
+          ? p.baseTop + Math.sin(p.movePhase + 0.022 * t) * p.moveAmp
           : p.topHeight;
 
         if (y - hitR <= topH + safetyMargin) {
           return false;
         }
       }
-      // Once falling fast again past the apex, top collision risk from this flap has passed
-      if (vy > 2.5) break;
+      if (vy > 2.2) break;
     }
     return true;
   }
 
   // Exact frame-by-frame check: if we wait 1 frame and only flap NEXT frame, would we clip a bottom pipe or floor?
   function wouldWaitClipBottom(bird, pipes, speed, playHeight, safetyMargin) {
-    const hitR = bird.radius - 3;
-    // Step 1: 1 frame of NOT flapping
-    let vy = Math.min(11.5, bird.vy + 0.44);
+    const hitR = bird.radius - 5;
+    let vy = Math.min(8.5, bird.vy + 0.33);
     let y = bird.y + vy;
 
     if (y + bird.radius >= playHeight - 4) return true;
@@ -59,16 +57,15 @@
       const px = p.x - speed;
       if (bird.x + hitR > px && bird.x - hitR < px + p.width) {
         const topH = p.isMoving
-          ? p.baseTop + Math.sin(p.movePhase + 0.035) * p.moveAmp
+          ? p.baseTop + Math.sin(p.movePhase + 0.022) * p.moveAmp
           : p.topHeight;
         if (y + hitR >= topH + p.gap - safetyMargin) return true;
       }
     }
 
-    // Step 2: Suppose we flap on frame 2; check if downward momentum or rising pipe bottom still clips
-    vy = -8.1;
-    for (let t = 2; t <= 10; t++) {
-      vy = Math.min(11.5, vy + 0.44);
+    vy = -7.0;
+    for (let t = 2; t <= 12; t++) {
+      vy = Math.min(8.5, vy + 0.33);
       y += vy;
       if (y + bird.radius >= playHeight - 4) return true;
 
@@ -77,7 +74,7 @@
         const px = p.x - speed * t;
         if (bird.x + hitR > px && bird.x - hitR < px + p.width) {
           const topH = p.isMoving
-            ? p.baseTop + Math.sin(p.movePhase + 0.035 * t) * p.moveAmp
+            ? p.baseTop + Math.sin(p.movePhase + 0.022 * t) * p.moveAmp
             : p.topHeight;
           if (y + hitR >= topH + p.gap - safetyMargin) return true;
         }
@@ -90,7 +87,7 @@
   function computeAIDecision(state) {
     const { bird, pipes, params, viewHeight, groundHeight } = state;
     const playHeight = viewHeight - groundHeight;
-    const hitRadius = bird.radius - 3;
+    const hitRadius = bird.radius - 5;
     const speed = params.speed;
 
     const targetIdx = pipes.findIndex((p) => p.x + p.width >= bird.x - hitRadius - 2);
@@ -114,18 +111,16 @@
     const tExit = Math.max(0, (targetPipe.x + targetPipe.width - (bird.x - hitRadius)) / speed);
     const tMid = (tEnter + tExit) * 0.5;
 
-    // If nearly done exiting targetPipe and nextPipe exists, blend anticipation toward nextPipe
     let aimPipe = targetPipe;
     let aimTime = tMid;
     if (nextPipe && tEnter === 0 && tExit <= 6) {
       const nextMid = ((nextPipe.x - bird.x) + nextPipe.width * 0.5) / speed;
       const nextTop = nextPipe.isMoving
-        ? nextPipe.baseTop + Math.sin(nextPipe.movePhase + 0.035 * nextMid) * nextPipe.moveAmp
+        ? nextPipe.baseTop + Math.sin(nextPipe.movePhase + 0.022 * nextMid) * nextPipe.moveAmp
         : nextPipe.topHeight;
       const curTop = targetPipe.isMoving
-        ? targetPipe.baseTop + Math.sin(targetPipe.movePhase + 0.035 * tExit) * targetPipe.moveAmp
+        ? targetPipe.baseTop + Math.sin(targetPipe.movePhase + 0.022 * tExit) * targetPipe.moveAmp
         : targetPipe.topHeight;
-      // If next pipe is significantly lower, don't flap unnecessarily at the exit
       if (nextTop > curTop + 55) {
         aimPipe = nextPipe;
         aimTime = nextMid;
@@ -133,13 +128,12 @@
     }
 
     const predTop = aimPipe.isMoving
-      ? aimPipe.baseTop + Math.sin(aimPipe.movePhase + 0.035 * aimTime) * aimPipe.moveAmp
+      ? aimPipe.baseTop + Math.sin(aimPipe.movePhase + 0.022 * aimTime) * aimPipe.moveAmp
       : aimPipe.topHeight;
     const gap = aimPipe.gap;
     const predCenterY = predTop + gap * 0.5;
 
-    // Desired trigger line sits ~24px above predicted bottom of gap (leaves ~36px top margin at 132px gap)
-    const idealTriggerY = predTop + gap - 24;
+    const idealTriggerY = predTop + gap - 36;
 
     const topSafeStrict = isFlapSafeFromTop(bird, pipes, speed, 4.5);
     const topSafeEmergency = isFlapSafeFromTop(bird, pipes, speed, 0.8);

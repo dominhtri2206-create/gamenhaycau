@@ -62,10 +62,10 @@
   let currentCharId = Hub.getSelectedCharacterId(isDemoAI);
 
   const WEAPONS = {
-    M: { name: 'M • RIFLE', cooldown: 8, speed: 12.5, dmg: 1.25, color: '#00f5d4' },
-    S: { name: 'S • SPREAD 5X', cooldown: 11, speed: 11.8, dmg: 1.15, color: '#ff2a85' },
-    L: { name: 'L • LASER', cooldown: 13, speed: 15.5, dmg: 2.8, color: '#38bdf8' },
-    F: { name: 'F • FIREBALL', cooldown: 14, speed: 10.2, dmg: 2.5, color: '#fbbf24' }
+    M: { name: 'M • RIFLE', cooldown: 7, speed: 13.5, dmg: 1.8, color: '#00f5d4' },
+    S: { name: 'S • SPREAD 5X', cooldown: 9, speed: 12.5, dmg: 1.5, color: '#ff2a85' },
+    L: { name: 'L • LASER', cooldown: 10, speed: 16.5, dmg: 3.6, color: '#38bdf8' },
+    F: { name: 'F • FIREBALL', cooldown: 11, speed: 11.2, dmg: 3.4, color: '#fbbf24' }
   };
 
   const player = {
@@ -82,7 +82,7 @@
     crouching: false,
     somersaultAngle: 0,
     runPhase: 0,
-    lives: 3,
+    lives: 5,
     weapon: 'M',
     fireTimer: 0,
     invulnTimer: 0,
@@ -100,7 +100,10 @@
     dropPressed: false,
     jump: false,
     jumpPressed: false,
-    fire: false
+    fire: false,
+    mouseFiring: false,
+    mouseX: 0,
+    mouseY: 0
   };
 
   const touchState = {
@@ -149,52 +152,61 @@
     spawnWaveTimer = 90;
     capsuleSpawnTimer = 110;
 
-    // Starting safe ground
+    // Starting safe ground + immediate early Spread (S) gift capsule!
     let cursor = -100;
-    groundSegments.push({ x1: -100, x2: 520 });
-    cursor = 520;
+    groundSegments.push({ x1: -100, x2: 580 });
+    capsules.push({
+      triggerX: 110,
+      spawned: false,
+      x: 0,
+      y: groundY - 175,
+      baseY: groundY - 175,
+      phase: 0,
+      item: 'S'
+    });
+    cursor = 580;
 
-    // Generate Cyber-Jungle segments with pits & multi-tier platforms
+    // Generate Cyber-Jungle segments with narrower pits & generous bridge platforms
     while (cursor < stageLength - 520) {
-      const pitW = 92 + Math.random() * 34;
-      // Bridge platform above pit 60% of the time
-      if (Math.random() < 0.65) {
+      const pitW = 68 + Math.random() * 24;
+      // Bridge platform above pit 85% of the time
+      if (Math.random() < 0.85) {
         platforms.push({
-          x: cursor - 15,
-          y: groundY - 84,
-          w: pitW + 30
+          x: cursor - 22,
+          y: groundY - 82,
+          w: pitW + 44
         });
       }
       cursor += pitW;
 
-      const segLen = 320 + Math.random() * 260;
+      const segLen = 360 + Math.random() * 260;
       groundSegments.push({ x1: cursor, x2: cursor + segLen });
 
       // Add tier-1 and tier-2 tactical platforms
-      const p1W = 130 + Math.random() * 90;
+      const p1W = 145 + Math.random() * 90;
       const p1X = cursor + 35 + Math.random() * 60;
-      platforms.push({ x: p1X, y: groundY - 90, w: p1W });
+      platforms.push({ x: p1X, y: groundY - 88, w: p1W });
 
       if (Math.random() < 0.65) {
         platforms.push({
           x: p1X + 40,
-          y: groundY - 174,
-          w: 120
+          y: groundY - 170,
+          w: 130
         });
       }
 
-      // Place Snipers & Armored Turrets along segment
+      // Place Snipers & Armored Turrets with relaxed HP & slower fire rate
       enemies.push({
         type: 'sniper',
         x: p1X + p1W * 0.55,
-        y: groundY - 90 - 26,
+        y: groundY - 88 - 26,
         vx: 0,
         vy: 0,
         w: 26,
         h: 48,
-        hp: 2 + Math.floor(stageNum * 0.5),
-        maxHp: 2 + Math.floor(stageNum * 0.5),
-        shootTimer: 50 + Math.random() * 50
+        hp: 1,
+        maxHp: 1,
+        shootTimer: 95 + Math.random() * 65
       });
 
       enemies.push({
@@ -203,21 +215,21 @@
         y: groundY - 22,
         w: 38,
         h: 38,
-        hp: 5 + stageNum,
-        maxHp: 5 + stageNum,
+        hp: 3 + Math.floor(stageNum * 0.5),
+        maxHp: 3 + Math.floor(stageNum * 0.5),
         angle: Math.PI,
-        shootTimer: 65 + Math.random() * 45
+        shootTimer: 110 + Math.random() * 60
       });
 
-      // Pre-place flying weapon capsule triggers
-      if (Math.random() < 0.75) {
-        const types = ['S', 'L', 'F', 'S', '♥'];
+      // Pre-place frequent weapon & health capsules
+      if (Math.random() < 0.88) {
+        const types = ['S', 'L', 'F', '♥', 'S'];
         capsules.push({
           triggerX: cursor + 80,
           spawned: false,
           x: 0,
-          y: groundY - 210,
-          baseY: groundY - 210,
+          y: groundY - 190,
+          baseY: groundY - 190,
           phase: 0,
           item: types[Math.floor(Math.random() * types.length)]
         });
@@ -228,12 +240,12 @@
 
     // Boss Arena flat ground + 2 tactical combat platforms
     groundSegments.push({ x1: cursor, x2: stageLength + 600 });
-    platforms.push({ x: stageLength - 380, y: groundY - 92, w: 125 });
-    platforms.push({ x: stageLength - 240, y: groundY - 175, w: 115 });
+    platforms.push({ x: stageLength - 390, y: groundY - 90, w: 140 });
+    platforms.push({ x: stageLength - 240, y: groundY - 172, w: 125 });
 
-    // Create End-of-Stage Cyber Fortress Boss Wall
-    const coreHp = 60 + (stageNum - 1) * 25;
-    const gunHp = 20 + (stageNum - 1) * 8;
+    // Create End-of-Stage Cyber Fortress Boss Wall (balanced HP)
+    const coreHp = 38 + (stageNum - 1) * 16;
+    const gunHp = 12 + (stageNum - 1) * 5;
     boss = {
       x: stageLength + 30,
       w: 150,
@@ -568,10 +580,10 @@
     }
 
     player.lives -= 1;
-    player.weapon = 'M';
-    screenShake = 12;
+    // Keep current upgraded weapon so taking a hit doesn't punish firepower!
+    screenShake = 10;
     window.soundFX.playerHurt();
-    addParticles(player.x, player.y, '#ff2a85', '#fbbf24', 26);
+    addParticles(player.x, player.y, '#ff2a85', '#fbbf24', 24);
     updateMetaHUD();
 
     if (player.lives <= 0) {
@@ -579,8 +591,8 @@
       return;
     }
 
-    // Respawn safely above nearest solid ground
-    player.invulnTimer = 120;
+    // Respawn safely with generous 2.6s invulnerability shield
+    player.invulnTimer = 155;
     player.vy = -4;
     player.y = groundY - 190;
     let safeX = Math.max(cameraX + 90, player.x - 40);
@@ -683,8 +695,19 @@
       player.vx = 0;
     }
 
-    // Compute 8-way Aim Vector
-    if (player.crouching) {
+    // Compute Aim Vector (supports both Mouse Cursor aim when clicking & 8-way AWSD aim!)
+    if (!aiEnabled && input.mouseFiring) {
+      const worldMouseX = input.mouseX + cameraX;
+      const worldMouseY = input.mouseY;
+      const mdx = worldMouseX - player.x;
+      const mdy = worldMouseY - (player.y - 6);
+      const len = Math.hypot(mdx, mdy) || 1;
+      player.aimX = mdx / len;
+      player.aimY = mdy / len;
+      if (!moveL && !moveR) {
+        player.facing = mdx >= 0 ? 1 : -1;
+      }
+    } else if (player.crouching) {
       player.aimX = player.facing;
       player.aimY = 0;
     } else {
@@ -729,7 +752,7 @@
       } else {
         player.recentPlatformTimer = 0;
       }
-      player.vy = -10.8;
+      player.vy = -11.3;
       player.onGround = false;
       player.crouching = false;
       window.soundFX.jump();
@@ -744,7 +767,7 @@
 
     // Apply Gravity & Move Player
     const prevBottom = player.y + player.h * 0.5;
-    player.vy = Math.min(12.5, player.vy + 0.48 * dt);
+    player.vy = Math.min(10.5, player.vy + 0.43 * dt);
     player.x += player.vx * dt;
     player.y += player.vy * dt;
 
@@ -793,15 +816,14 @@
       }
     }
 
-    // Pit Fall Check
-    if (player.y > viewH + 50) {
-      if (aiEnabled) {
-        // Emergency AI jet-boost recovery if ever pushed into pit
-        player.vy = -12;
-        player.y = groundY - 120;
-        player.x += 55;
-      } else {
-        damagePlayer();
+    // Pit Fall Check: auto jet-rescue bounce out of pit instead of harsh instant death!
+    if (player.y > viewH + 35) {
+      player.vy = -13.2;
+      player.y = groundY - 40;
+      player.x += player.facing * 48;
+      if (!aiEnabled && player.invulnTimer <= 0) {
+        player.invulnTimer = 95;
+        showToast('🚀 Đệm Phản Lực Cứu Hộ!', 'Đã đẩy bạn thoát khỏi hố vực!');
       }
     }
 
@@ -825,17 +847,16 @@
       firePlayerWeapon();
     }
 
-    // Dynamic Wave Spawns (Runners & Hover Drones)
+    // Dynamic Wave Spawns (Relaxed runner & drone pacing)
     spawnWaveTimer -= dt;
     if (spawnWaveTimer <= 0) {
-      spawnWaveTimer = bossLocked ? 95 : Math.max(46, 84 - stage * 6);
+      spawnWaveTimer = bossLocked ? 130 : Math.max(90, 140 - stage * 7);
       if (!bossLocked) {
-        // Spawn Contra Runner ahead
         enemies.push({
           type: 'runner',
           x: cameraX + viewW + 30,
           y: groundY - 24,
-          vx: -(2.5 + Math.min(1.8, stage * 0.25)),
+          vx: -(1.75 + Math.min(1.1, stage * 0.16)),
           vy: 0,
           w: 24,
           h: 46,
@@ -843,19 +864,19 @@
           maxHp: 1,
           onGround: true
         });
-        if (Math.random() < 0.42) {
+        if (Math.random() < 0.3) {
           enemies.push({
             type: 'drone',
             x: cameraX + viewW + 40,
             y: groundY - 165 - Math.random() * 55,
             baseY: groundY - 175,
             phase: Math.random() * Math.PI * 2,
-            vx: -2.2,
+            vx: -1.7,
             w: 30,
             h: 24,
-            hp: 2,
-            maxHp: 2,
-            shootTimer: 55
+            hp: 1,
+            maxHp: 1,
+            shootTimer: 95
           });
         }
       } else if (boss && !boss.defeated) {
@@ -913,10 +934,10 @@
       }
 
       // Player pickup check
-      if (Math.hypot(pw.x - player.x, pw.y - player.y) < 34) {
+      if (Math.hypot(pw.x - player.x, pw.y - player.y) < 38) {
         window.soundFX.powerup();
         if (pw.item === '♥') {
-          player.lives = Math.min(5, player.lives + 1);
+          player.lives = Math.min(7, player.lives + 1);
           showToast('❤️ Tiếp tế Quân Y!', '+1 Mạng chiến đấu');
         } else {
           player.weapon = pw.item;
@@ -1038,8 +1059,8 @@
       }
     }
 
-    // Update Active Enemies
-    const pHitH = player.crouching ? 26 : 44;
+    // Update Active Enemies (smaller forgiving player hitbox & slower enemy projectiles)
+    const pHitH = player.crouching ? 16 : 28;
     const pCenterY = player.crouching ? player.y + 12 : player.y;
 
     for (let i = enemies.length - 1; i >= 0; i--) {
@@ -1070,38 +1091,38 @@
         }
       } else if (en.type === 'drone') {
         en.x += en.vx * dt;
-        en.phase += 0.065 * dt;
-        en.y = en.baseY + Math.sin(en.phase) * 32;
+        en.phase += 0.055 * dt;
+        en.y = en.baseY + Math.sin(en.phase) * 26;
         en.shootTimer -= dt;
         if (en.shootTimer <= 0) {
-          en.shootTimer = 85;
+          en.shootTimer = 135;
           const a = Math.atan2(pCenterY - en.y, player.x - en.x);
-          enemyBullets.push({ x: en.x, y: en.y, vx: Math.cos(a) * 4.4, vy: Math.sin(a) * 4.4, r: 5 });
+          enemyBullets.push({ x: en.x, y: en.y, vx: Math.cos(a) * 2.9, vy: Math.sin(a) * 2.9, r: 5 });
         }
       } else if (en.type === 'sniper' || en.type === 'turret') {
         const ang = Math.atan2(pCenterY - en.y, player.x - en.x);
         en.angle = ang;
         en.shootTimer -= dt;
         if (en.shootTimer <= 0) {
-          en.shootTimer = en.type === 'turret' ? Math.max(48, 82 - stage * 5) : Math.max(55, 92 - stage * 5);
-          const spd = en.type === 'turret' ? 4.8 : 4.3;
+          en.shootTimer = en.type === 'turret' ? Math.max(95, 138 - stage * 5) : Math.max(105, 148 - stage * 5);
+          const spd = en.type === 'turret' ? 3.2 : 2.85;
           enemyBullets.push({
             x: en.x + Math.cos(ang) * 16,
             y: en.y + Math.sin(ang) * 16,
             vx: Math.cos(ang) * spd,
             vy: Math.sin(ang) * spd,
-            r: 5.5
+            r: 5
           });
         }
       }
 
       // Direct contact damage
-      if (Math.abs(en.x - player.x) < (en.w + 20) * 0.5 && Math.abs(en.y - pCenterY) < (en.h + pHitH) * 0.45) {
+      if (Math.abs(en.x - player.x) < (en.w + 14) * 0.45 && Math.abs(en.y - pCenterY) < (en.h + pHitH) * 0.42) {
         damagePlayer();
       }
     }
 
-    // Update Boss AI & Boss HUD
+    // Update Boss AI & Boss HUD (fair, readable bullet patterns)
     if (boss && boss.active && !boss.defeated) {
       if (boss.core.flash > 0) boss.core.flash -= dt;
 
@@ -1116,19 +1137,19 @@
         if (t.hp <= 0) continue;
         t.shootTimer -= dt;
         if (t.shootTimer <= 0) {
-          t.shootTimer = t.kind === 'laser' ? Math.max(46, 76 - stage * 5) : Math.max(64, 96 - stage * 5);
+          t.shootTimer = t.kind === 'laser' ? Math.max(85, 122 - stage * 5) : Math.max(105, 142 - stage * 5);
           if (t.kind === 'laser') {
             const a = Math.atan2(pCenterY - t.y, player.x - t.x);
-            enemyBullets.push({ x: t.x - 12, y: t.y, vx: Math.cos(a) * 5.2, vy: Math.sin(a) * 5.2, r: 6 });
+            enemyBullets.push({ x: t.x - 12, y: t.y, vx: Math.cos(a) * 3.4, vy: Math.sin(a) * 3.4, r: 5.5 });
           } else {
             // Arcing plasma mortar shell
             enemyBullets.push({
               x: t.x - 12,
               y: t.y,
-              vx: -(3.6 + Math.random() * 2.2),
-              vy: -6.5,
-              gravity: 0.18,
-              r: 7
+              vx: -(2.8 + Math.random() * 1.8),
+              vy: -5.8,
+              gravity: 0.15,
+              r: 6.5
             });
           }
         }
@@ -1137,16 +1158,16 @@
       // Boss Core radial burst
       boss.core.shootTimer -= dt;
       if (boss.core.shootTimer <= 0) {
-        const enraged = boss.core.hp < boss.core.maxHp * 0.5;
-        boss.core.shootTimer = enraged ? 62 : 92;
-        const angles = enraged ? [Math.PI - 0.35, Math.PI, Math.PI + 0.35] : [Math.PI - 0.18, Math.PI + 0.18];
+        const enraged = boss.core.hp < boss.core.maxHp * 0.45;
+        boss.core.shootTimer = enraged ? 98 : 132;
+        const angles = enraged ? [Math.PI - 0.3, Math.PI, Math.PI + 0.3] : [Math.PI - 0.16, Math.PI + 0.16];
         angles.forEach((a) => {
           enemyBullets.push({
             x: boss.core.x - 20,
             y: boss.core.y,
-            vx: Math.cos(a) * 4.8,
-            vy: Math.sin(a) * 4.8,
-            r: 6.5
+            vx: Math.cos(a) * 3.3,
+            vy: Math.sin(a) * 3.3,
+            r: 6
           });
         });
       }
@@ -1164,7 +1185,7 @@
         continue;
       }
 
-      if (Math.abs(eb.x - player.x) < 13 + eb.r && Math.abs(eb.y - pCenterY) < pHitH * 0.45 + eb.r) {
+      if (Math.abs(eb.x - player.x) < 9 + eb.r && Math.abs(eb.y - pCenterY) < pHitH * 0.42 + eb.r) {
         enemyBullets.splice(i, 1);
         damagePlayer();
       }
@@ -1650,8 +1671,8 @@
     syncAIBarUI();
     score = 0;
     lastRunVoucher = null;
-    player.lives = 3;
-    player.weapon = withAI ? 'S' : 'M'; // Give AI immediate iconic Spread S showcase, or M for player!
+    player.lives = 5;
+    player.weapon = withAI ? 'S' : 'M';
     currentCharId = Hub.getSelectedCharacterId(isDemoAI);
     hudScore.textContent = '0';
 
@@ -1703,12 +1724,24 @@
     if (e.code === 'Space') input.jump = false;
   });
 
-  canvas.addEventListener('pointerdown', () => {
+  canvas.addEventListener('pointerdown', (e) => {
     window.soundFX.init();
-    if (!aiEnabled && gameState === 'PLAYING') input.fire = true;
+    if (!aiEnabled && gameState === 'PLAYING') {
+      input.fire = true;
+      input.mouseFiring = true;
+      input.mouseX = e.clientX;
+      input.mouseY = e.clientY;
+    }
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (input.mouseFiring) {
+      input.mouseX = e.clientX;
+      input.mouseY = e.clientY;
+    }
   });
   window.addEventListener('pointerup', () => {
     input.fire = false;
+    input.mouseFiring = false;
   });
 
   // Virtual Joystick & Touch Multi-button Handling

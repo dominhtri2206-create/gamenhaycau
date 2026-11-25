@@ -148,10 +148,10 @@
     wingPhase: 0
   };
 
-  // Physics constants normalized to 60 FPS (dt = 1.0 at 16.667ms)
-  const GRAVITY = 0.44;
-  const FLAP_IMPULSE = -8.1;
-  const MAX_FALL_SPEED = 11.5;
+  // Physics constants normalized to 60 FPS (tuned for smooth, forgiving casual play)
+  const GRAVITY = 0.33;
+  const FLAP_IMPULSE = -7.0;
+  const MAX_FALL_SPEED = 8.5;
 
   let pipes = [];
   let pipeTimer = 0;
@@ -232,13 +232,13 @@
     document.body.setAttribute('data-theme', targetDayBlend > 0.5 ? 'day' : 'night');
   }
 
-  // --- Difficulty Scaling ---
+  // --- Difficulty Scaling (Friendly & Forgiving) ---
   function getDifficultyParams(pts) {
-    const level = Math.min(8, Math.floor(pts / 10) + 1);
-    const speed = Math.min(5.6, 3.0 + pts * 0.032);
-    const gap = Math.max(132, 174 - pts * 0.45);
-    const spawnInterval = Math.max(66, 98 - pts * 0.32); // frames at 60fps
-    const movingChance = pts >= 20 ? Math.min(0.65, (pts - 15) * 0.015) : 0;
+    const level = Math.min(8, Math.floor(pts / 12) + 1);
+    const speed = Math.min(4.1, 2.35 + pts * 0.02);
+    const gap = Math.max(168, 215 - pts * 0.35);
+    const spawnInterval = Math.max(88, 118 - pts * 0.25); // frames at 60fps
+    const movingChance = pts >= 30 ? Math.min(0.35, (pts - 25) * 0.01) : 0;
     return { level, speed, gap, spawnInterval, movingChance };
   }
 
@@ -434,7 +434,7 @@
     let hi = maxTop;
     if (pipes.length > 0) {
       const prevTop = pipes[pipes.length - 1].baseTop;
-      const maxDelta = 220;
+      const maxDelta = 170;
       lo = Math.max(minTop, prevTop - maxDelta);
       hi = Math.min(maxTop, prevTop + maxDelta);
     }
@@ -450,7 +450,7 @@
       passed: false,
       isMoving,
       movePhase: Math.random() * Math.PI * 2,
-      moveAmp: isMoving ? Math.min(34, (maxTop - minTop) * 0.25) : 0
+      moveAmp: isMoving ? Math.min(22, (maxTop - minTop) * 0.18) : 0
     });
   }
 
@@ -503,14 +503,14 @@
         spawnPipe();
       }
 
-      // Update pipes & check collisions
-      const hitRadius = bird.radius - 3; // slightly forgiving hitbox
+      // Update pipes & check collisions (generous hitbox)
+      const hitRadius = bird.radius - 5;
       for (let i = pipes.length - 1; i >= 0; i--) {
         const p = pipes[i];
         p.x -= params.speed * dt;
 
         if (p.isMoving) {
-          p.movePhase += 0.035 * dt;
+          p.movePhase += 0.022 * dt;
           p.topHeight = p.baseTop + Math.sin(p.movePhase) * p.moveAmp;
         }
 
