@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>NEON FLAP [AUTO-PILOT PHÁ ĐẢO] — Chế độ Ngồi Xem Vận Hành</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // Bật cờ chế độ Demo trước khi game.js khởi chạy
+    window.NEONFLAP_AUTOPILOT = true;
+    // Làm mới dữ liệu demo mỗi lần mở trang để bạn xem trọn vẹn các mốc mở khóa Voucher & Huy chương
+    localStorage.removeItem('neonflap_demo_best_score');
+    localStorage.removeItem('neonflap_demo_voucher_wallet');
+    localStorage.setItem('neonflap_demo_theme_mode', 'auto');
+  </script>
+</head>
+<body data-theme="night">
+  <div id="app">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Top HUD -->
+    <header id="hud" class="hud">
+      <div class="hud-left">
+        <button id="btnSound" class="icon-btn" title="Bật / Tắt âm thanh" aria-label="Âm thanh">
+          <span id="soundIcon">🔊</span>
+        </button>
+        <button id="btnThemeQuick" class="icon-btn" title="Đổi chế độ Ngày / Đêm / Tự động" aria-label="Chế độ Ngày Đêm">
+          <span id="themeIcon">🌗</span>
+        </button>
+        <a href="index.html" class="pill-btn" style="text-decoration:none" title="Chuyển sang bản tự chơi">
+          🎮 Bản Tự Chơi
+        </a>
+      </div>
+
+      <div id="liveScoreWrap" class="live-score-wrap hidden">
+        <div id="liveScore" class="live-score">0</div>
+        <div id="difficultyBadge" class="difficulty-badge">LV.1</div>
+      </div>
+
+      <div class="hud-right">
+        <button id="btnWallet" class="pill-btn" title="Kho Voucher đã tự động săn được">
+          🎟️ <span id="voucherCount">0</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden" role="status" aria-live="polite">
+      <div class="toast-icon">🎁</div>
+      <div class="toast-body">
+        <div id="toastTitle" class="toast-title">Mở khóa Voucher!</div>
+        <div id="toastDesc" class="toast-desc">Giảm 10% hóa đơn</div>
+      </div>
+    </div>
+
+    <!-- AI Showcase Control Dock -->
+    <aside id="demoDock" class="demo-dock">
+      <div class="demo-dock-top">
+        <div id="aiStatusPill" class="ai-status-pill">
+          <span class="ai-dot"></span>
+          <span id="aiStatusText">AI AUTO-PILOT: ĐANG PHÁ ĐẢO</span>
+        </div>
+        <div class="demo-telemetry">
+          <span>Tốc độ ống: <strong id="telSpeed">3.0</strong></span>
+          <span>Khe hở: <strong id="telGap">174px</strong></span>
+          <span>Mốc kế: <strong id="telNextGoal">10đ (Đồng + Voucher)</strong></span>
+        </div>
+      </div>
+
+      <div class="demo-controls-row">
+        <div class="speed-group">
+          <button class="chip-btn speed-btn active" data-speed="1">1x</button>
+          <button class="chip-btn speed-btn" data-speed="2">2x</button>
+          <button class="chip-btn speed-btn" data-speed="4">4x</button>
+          <button class="chip-btn speed-btn" data-speed="8">8x Tua nhanh</button>
+        </div>
+
+        <div class="demo-btn-group">
+          <button id="btnToggleAI" class="chip-btn active">🤖 AI Bay</button>
+          <button id="btnToggleLaser" class="chip-btn active">🎯 Tia ngắm AI</button>
+          <button id="btnAutoSkin" class="chip-btn active">✨ Tự đổi Skin</button>
+          <button id="btnAutoStop100" class="chip-btn" title="Tự động kết thúc khi đạt 105 điểm (Huy chương Bạch Kim) để xem màn tổng kết">🏁 Dừng ở 105đ</button>
+          <button id="btnTriggerEnd" class="chip-btn finish-btn">🏆 Xem Tổng Kết</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Start / Main Menu Overlay (kept for compatibility, bypassed automatically) -->
+    <section id="menuScreen" class="overlay">
+      <div class="glass-card menu-card">
+        <div class="brand-tag" id="shopBrandTag">✨ NEON CAFE ARCADE</div>
+        <h1 class="game-title">NEON<span>FLAP</span></h1>
+        <p class="subtitle">Chế độ AI tự động vận hành &amp; phá đảo</p>
+
+        <div class="stats-strip">
+          <div class="stat-box">
+            <span class="stat-label">ĐIỂM CAO NHẤT</span>
+            <span id="menuBestScore" class="stat-value">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">HUY CHƯƠNG</span>
+            <span id="menuBestMedal" class="stat-value">—</span>
+          </div>
+        </div>
+
+        <button id="btnStart" class="primary-btn pulse">
+          <span>CHO AI BAY NGAY</span>
+        </button>
+
+        <div class="menu-actions">
+          <button id="btnOpenSkins" class="secondary-btn">✨ Nhân vật &amp; Ngày/Đêm</button>
+          <button id="btnOpenVouchers" class="secondary-btn">🎟️ Đổi thưởng Voucher</button>
+        </div>
+
+        <button id="btnOpenSettings" class="text-link-btn">⚙️ Cấu hình mốc Voucher quán</button>
+      </div>
+    </section>
+
+    <!-- Get Ready Hint -->
+    <div id="readyOverlay" class="ready-overlay hidden">
+      <div class="ready-title">AI ĐÃ SẴN SÀNG!</div>
+      <div class="ready-tap">TỰ ĐỘNG CẤT CÁNH...</div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <section id="gameOverScreen" class="overlay">
+      <div class="glass-card gameover-card">
+        <h2 class="gameover-title">TỔNG KẾT PHÁ ĐẢO</h2>
+
+        <div class="scoreboard-grid">
+          <div class="medal-slot">
+            <div class="slot-label">HUY CHƯƠNG</div>
+            <div id="medalCircle" class="medal-circle none">
+              <span id="medalEmoji">—</span>
+            </div>
+            <div id="medalName" class="medal-name">Chưa đạt</div>
+          </div>
+
+          <div class="scores-slot">
+            <div class="score-row">
+              <span class="slot-label">ĐIỂM SỐ</span>
+              <span id="finalScore" class="score-num">0</span>
+            </div>
+            <div class="score-row">
+              <span class="slot-label">KỶ LỤC <span id="newBestBadge" class="new-badge hidden">MỚI!</span></span>
+              <span id="bestScore" class="score-num best">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="unlockedVoucherBox" class="voucher-banner hidden">
+          <div class="voucher-banner-header">🎉 ĐÃ MỞ KHÓA VOUCHER MỚI NHẤT!</div>
+          <div id="unlockedVoucherTitle" class="voucher-banner-title">Giảm 15% tổng bill</div>
+          <div class="voucher-code-row">
+            <code id="unlockedVoucherCode">NEON15-XXXX</code>
+            <button id="btnCopyNewVoucher" class="copy-btn">Sao chép</button>
+          </div>
+        </div>
+
+        <div id="nextMilestoneHint" class="milestone-hint">
+          Đạt <strong>10 điểm</strong> để nhận Huy chương Đồng &amp; Voucher đầu tiên!
+        </div>
+
+        <div class="gameover-actions">
+          <button id="btnRestart" class="primary-btn">🤖 CHO AI BAY TIẾP</button>
+          <div class="menu-actions">
+            <button id="btnGameOverMenu" class="secondary-btn">🏠 Trang chủ</button>
+            <button id="btnGameOverWallet" class="secondary-btn">🎟️ Ví Voucher</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skins & Day/Night Modal -->
+    <section id="skinModal" class="overlay modal-overlay">
+      <div class="glass-card modal-card">
+        <div class="modal-header">
+          <h3>✨ TÙY CHỈNH GIAO DIỆN</h3>
+          <button class="close-btn" data-close="skinModal">✕</button>
+        </div>
+
+        <div class="section-label">CHỌN NHÂN VẬT (SKIN)</div>
+        <div id="skinGrid" class="skin-grid"></div>
+
+        <div class="section-label">CHẾ ĐỘ ÁNH SÁNG</div>
+        <div class="theme-selector" id="themeSelector">
+          <button class="theme-opt" data-mode="night">🌙 Đêm Neon</button>
+          <button class="theme-opt" data-mode="day">☀️ Ngày Tối Giản</button>
+          <button class="theme-opt" data-mode="auto">🌗 Tự động đổi</button>
+        </div>
+        <p class="helper-note">Ở chế độ Tự động, bầu trời chuyển đổi mượt mà giữa Ngày &amp; Đêm mỗi 15 điểm.</p>
+      </div>
+    </section>
+
+    <!-- Voucher Wallet & Tiers Modal -->
+    <section id="voucherModal" class="overlay modal-overlay">
+      <div class="glass-card modal-card">
+        <div class="modal-header">
+          <h3>🎟️ VOUCHER &amp; MỐC THƯỞNG</h3>
+          <button class="close-btn" data-close="voucherModal">✕</button>
+        </div>
+
+        <div class="section-label">MỐC ĐIỂM NHẬN QUÀ</div>
+        <div id="tierList" class="tier-list"></div>
+
+        <div class="section-label">VÍ VOUCHER ĐÃ NHẬN TRONG PHIÊN XEM</div>
+        <div id="walletList" class="wallet-list"></div>
+      </div>
+    </section>
+
+    <!-- Cafe Owner Settings Modal -->
+    <section id="settingsModal" class="overlay modal-overlay">
+      <div class="glass-card modal-card">
+        <div class="modal-header">
+          <h3>⚙️ CẤU HÌNH QUÁN / SỰ KIỆN</h3>
+          <button class="close-btn" data-close="settingsModal">✕</button>
+        </div>
+        <form id="settingsForm" class="settings-form">
+          <label class="field-label">
+            Tên quán / thương hiệu hiển thị
+            <input type="text" id="inputShopName" maxlength="32" placeholder="VD: NEON COFFEE" required />
+          </label>
+          <label class="field-label">
+            Tiền tố mã Voucher
+            <input type="text" id="inputCodePrefix" maxlength="10" placeholder="VD: CF" required />
+          </label>
+          <div class="section-label">CÁC MỐC ĐIỂM &amp; PHẦN THƯỞNG</div>
+          <div id="tierSettingsInputs" class="tier-settings-inputs"></div>
+
+          <div class="settings-actions">
+            <button type="submit" class="primary-btn">LƯU CẤU HÌNH</button>
+            <button type="button" id="btnResetData" class="danger-btn">Xóa kỷ lục &amp; ví</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script src="audio.js"></script>
+  <script src="autopilot.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -2,11 +2,13 @@
   'use strict';
 
   // --- Constants & Default Config ---
+  const DEMO_MODE = Boolean(window.NEONFLAP_AUTOPILOT);
+  const KEY_PREFIX = DEMO_MODE ? 'neonflap_demo_' : 'neonflap_';
   const STORAGE_KEYS = {
-    BEST_SCORE: 'neonflap_best_score',
-    SKIN: 'neonflap_skin',
-    THEME_MODE: 'neonflap_theme_mode',
-    WALLET: 'neonflap_voucher_wallet',
+    BEST_SCORE: KEY_PREFIX + 'best_score',
+    SKIN: KEY_PREFIX + 'skin',
+    THEME_MODE: KEY_PREFIX + 'theme_mode',
+    WALLET: KEY_PREFIX + 'voucher_wallet',
     SHOP_CONFIG: 'neonflap_shop_config'
   };
 
@@ -423,7 +425,16 @@
     const playHeight = viewHeight - groundHeight;
     const minTop = 68;
     const maxTop = Math.max(minTop + 40, playHeight - params.gap - 78);
-    const topHeight = minTop + Math.random() * (maxTop - minTop);
+
+    let lo = minTop;
+    let hi = maxTop;
+    if (pipes.length > 0) {
+      const prevTop = pipes[pipes.length - 1].baseTop;
+      const maxDelta = 220;
+      lo = Math.max(minTop, prevTop - maxDelta);
+      hi = Math.min(maxTop, prevTop + maxDelta);
+    }
+    const topHeight = lo + Math.random() * Math.max(1, hi - lo);
 
     const isMoving = Math.random() < params.movingChance;
     pipes.push({
@@ -820,18 +831,81 @@
     drawGround();
     drawBird();
 
+    if (window.__neonFlapHooks && typeof window.__neonFlapHooks.onRender === 'function') {
+      window.__neonFlapHooks.onRender(ctx, api.getState());
+    }
+
     ctx.restore();
   }
+
+  // --- External Controller / Auto-Pilot API ---
+  let simSpeed = 1;
+  let simTimeAccum = 0;
+
+  const api = {
+    getState() {
+      return {
+        gameState,
+        score,
+        bestScore,
+        difficultyLevel,
+        viewWidth,
+        viewHeight,
+        groundHeight,
+        dayBlend,
+        themeMode,
+        currentSkinId,
+        skins: SKINS,
+        bird,
+        pipes,
+        params: getDifficultyParams(score),
+        simSpeed
+      };
+    },
+    startReady() {
+      enterReadyState();
+    },
+    flap() {
+      flapAction();
+    },
+    forceGameOver() {
+      if (gameState === 'PLAYING' || gameState === 'READY') {
+        gameState = 'PLAYING';
+        triggerGameOver();
+      }
+    },
+    setSimSpeed(mult) {
+      simSpeed = Math.max(1, Math.min(16, Number(mult) || 1));
+    },
+    setSkin(skinId) {
+      if (SKINS.some((s) => s.id === skinId)) {
+        currentSkinId = skinId;
+        localStorage.setItem(STORAGE_KEYS.SKIN, currentSkinId);
+      }
+    },
+    showToast
+  };
+  window.__neonFlapAPI = api;
 
   // --- Main RAF Loop ---
   let lastTime = performance.now();
   function gameLoop(now) {
     const rawDt = (now - lastTime) / 16.6667;
     lastTime = now;
-    const dt = Math.min(2.4, Math.max(0.1, rawDt));
+    const baseDt = Math.min(2.0, Math.max(0.1, rawDt));
 
-    update(dt, now * 0.001);
-    render(now * 0.001);
+    const steps = simSpeed > 1 ? Math.round(simSpeed) : 1;
+    const stepDt = simSpeed > 1 ? 1.0 : baseDt;
+
+    for (let s = 0; s < steps; s++) {
+      simTimeAccum += (stepDt * 16.6667) * 0.001;
+      if (window.__neonFlapHooks && typeof window.__neonFlapHooks.onBeforeStep === 'function') {
+        window.__neonFlapHooks.onBeforeStep(api);
+      }
+      update(stepDt, simTimeAccum);
+    }
+
+    render(simTimeAccum);
     requestAnimationFrame(gameLoop);
   }
 
