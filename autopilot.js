@@ -14,16 +14,16 @@
   let debugAim = null;
 
   // Exact frame-by-frame trajectory check: if we flap right now, will the upward arc hit any top pipe?
-  function isFlapSafeFromTop(bird, pipes, params, safetyMargin) {
+  function isFlapSafeFromTop(bird, pipes, params, playHeight, safetyMargin) {
     const speed = params.speed;
-    const grav = params.gravity || 0.33;
-    const impulse = params.flapImpulse || -7.0;
-    const maxFall = params.maxFall || 8.5;
-    const hitR = bird.radius - 5;
+    const grav = params.gravity || 0.44;
+    const impulse = params.flapImpulse || -8.1;
+    const maxFall = params.maxFall || 11.5;
+    const hitR = bird.radius - (playHeight < 430 ? 2 : 3);
     let y = bird.y;
     let vy = impulse;
 
-    for (let t = 1; t <= 28; t++) {
+    for (let t = 1; t <= 26; t++) {
       vy = Math.min(maxFall, vy + grav);
       y += vy;
 
@@ -36,14 +36,14 @@
         if (px + p.width < bird.x - hitR) continue;
 
         const topH = p.isMoving
-          ? p.baseTop + Math.sin(p.movePhase + 0.022 * t) * p.moveAmp
+          ? p.baseTop + Math.sin(p.movePhase + 0.035 * t) * p.moveAmp
           : p.topHeight;
 
         if (y - hitR <= topH + safetyMargin) {
           return false;
         }
       }
-      if (vy > 2.2) break;
+      if (vy > 2.5) break;
     }
     return true;
   }
@@ -51,10 +51,10 @@
   // Exact frame-by-frame check: if we wait 1 frame and only flap NEXT frame, would we clip a bottom pipe or floor?
   function wouldWaitClipBottom(bird, pipes, params, playHeight, safetyMargin) {
     const speed = params.speed;
-    const grav = params.gravity || 0.33;
-    const impulse = params.flapImpulse || -7.0;
-    const maxFall = params.maxFall || 8.5;
-    const hitR = bird.radius - 5;
+    const grav = params.gravity || 0.44;
+    const impulse = params.flapImpulse || -8.1;
+    const maxFall = params.maxFall || 11.5;
+    const hitR = bird.radius - (playHeight < 430 ? 2 : 3);
     let vy = Math.min(maxFall, bird.vy + grav);
     let y = bird.y + vy;
 
@@ -65,14 +65,14 @@
       const px = p.x - speed;
       if (bird.x + hitR > px && bird.x - hitR < px + p.width) {
         const topH = p.isMoving
-          ? p.baseTop + Math.sin(p.movePhase + 0.022) * p.moveAmp
+          ? p.baseTop + Math.sin(p.movePhase + 0.035) * p.moveAmp
           : p.topHeight;
         if (y + hitR >= topH + p.gap - safetyMargin) return true;
       }
     }
 
     vy = impulse;
-    for (let t = 2; t <= 12; t++) {
+    for (let t = 2; t <= 10; t++) {
       vy = Math.min(maxFall, vy + grav);
       y += vy;
       if (y + bird.radius >= playHeight - 4) return true;
@@ -82,7 +82,7 @@
         const px = p.x - speed * t;
         if (bird.x + hitR > px && bird.x - hitR < px + p.width) {
           const topH = p.isMoving
-            ? p.baseTop + Math.sin(p.movePhase + 0.022 * t) * p.moveAmp
+            ? p.baseTop + Math.sin(p.movePhase + 0.035 * t) * p.moveAmp
             : p.topHeight;
           if (y + hitR >= topH + p.gap - safetyMargin) return true;
         }
@@ -95,7 +95,7 @@
   function computeAIDecision(state) {
     const { bird, pipes, params, viewHeight, groundHeight } = state;
     const playHeight = viewHeight - groundHeight;
-    const hitRadius = bird.radius - 5;
+    const hitRadius = bird.radius - (playHeight < 430 ? 2 : 3);
     const speed = params.speed;
 
     const targetIdx = pipes.findIndex((p) => p.x + p.width >= bird.x - hitRadius - 2);
@@ -124,10 +124,10 @@
     if (nextPipe && tEnter === 0 && tExit <= 6) {
       const nextMid = ((nextPipe.x - bird.x) + nextPipe.width * 0.5) / speed;
       const nextTop = nextPipe.isMoving
-        ? nextPipe.baseTop + Math.sin(nextPipe.movePhase + 0.022 * nextMid) * nextPipe.moveAmp
+        ? nextPipe.baseTop + Math.sin(nextPipe.movePhase + 0.035 * nextMid) * nextPipe.moveAmp
         : nextPipe.topHeight;
       const curTop = targetPipe.isMoving
-        ? targetPipe.baseTop + Math.sin(targetPipe.movePhase + 0.022 * tExit) * targetPipe.moveAmp
+        ? targetPipe.baseTop + Math.sin(targetPipe.movePhase + 0.035 * tExit) * targetPipe.moveAmp
         : targetPipe.topHeight;
       if (nextTop > curTop + 55) {
         aimPipe = nextPipe;
@@ -136,15 +136,15 @@
     }
 
     const predTop = aimPipe.isMoving
-      ? aimPipe.baseTop + Math.sin(aimPipe.movePhase + 0.022 * aimTime) * aimPipe.moveAmp
+      ? aimPipe.baseTop + Math.sin(aimPipe.movePhase + 0.035 * aimTime) * aimPipe.moveAmp
       : aimPipe.topHeight;
     const gap = aimPipe.gap;
     const predCenterY = predTop + gap * 0.5;
 
-    const idealTriggerY = predTop + gap - Math.min(36, gap * 0.24);
+    const idealTriggerY = predTop + gap - Math.min(24, gap * 0.2);
 
-    const topSafeStrict = isFlapSafeFromTop(bird, pipes, params, 4.0);
-    const topSafeEmergency = isFlapSafeFromTop(bird, pipes, params, 0.8);
+    const topSafeStrict = isFlapSafeFromTop(bird, pipes, params, playHeight, 4.0);
+    const topSafeEmergency = isFlapSafeFromTop(bird, pipes, params, playHeight, 0.8);
     const urgentBottom = wouldWaitClipBottom(bird, pipes, params, playHeight, 5.0);
 
     let shouldFlap = false;

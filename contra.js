@@ -62,10 +62,10 @@
   let currentCharId = Hub.getSelectedCharacterId(isDemoAI);
 
   const WEAPONS = {
-    M: { name: 'M • RIFLE', cooldown: 7, speed: 13.5, dmg: 1.8, color: '#00f5d4' },
-    S: { name: 'S • SPREAD 5X', cooldown: 9, speed: 12.5, dmg: 1.5, color: '#ff2a85' },
-    L: { name: 'L • LASER', cooldown: 10, speed: 16.5, dmg: 3.6, color: '#38bdf8' },
-    F: { name: 'F • FIREBALL', cooldown: 11, speed: 11.2, dmg: 3.4, color: '#fbbf24' }
+    M: { name: 'M • RIFLE', cooldown: 8, speed: 12.5, dmg: 1.25, color: '#00f5d4' },
+    S: { name: 'S • SPREAD 5X', cooldown: 11, speed: 11.8, dmg: 1.15, color: '#ff2a85' },
+    L: { name: 'L • LASER', cooldown: 13, speed: 15.5, dmg: 2.8, color: '#38bdf8' },
+    F: { name: 'F • FIREBALL', cooldown: 14, speed: 10.2, dmg: 2.5, color: '#fbbf24' }
   };
 
   const player = {
@@ -82,7 +82,7 @@
     crouching: false,
     somersaultAngle: 0,
     runPhase: 0,
-    lives: 5,
+    lives: 3,
     weapon: 'M',
     fireTimer: 0,
     invulnTimer: 0,
@@ -176,61 +176,52 @@
     spawnWaveTimer = 90;
     capsuleSpawnTimer = 110;
 
-    // Starting safe ground + immediate early Spread (S) gift capsule!
+    // Starting safe ground
     let cursor = -100;
-    groundSegments.push({ x1: -100, x2: 580 });
-    capsules.push({
-      triggerX: 110,
-      spawned: false,
-      x: 0,
-      y: groundY - 175,
-      baseY: groundY - 175,
-      phase: 0,
-      item: 'S'
-    });
-    cursor = 580;
+    groundSegments.push({ x1: -100, x2: 520 });
+    cursor = 520;
 
-    // Generate Cyber-Jungle segments with narrower pits & generous bridge platforms
+    // Generate Cyber-Jungle segments with pits & multi-tier platforms
     while (cursor < stageLength - 520) {
-      const pitW = 68 + Math.random() * 24;
-      // Bridge platform above pit 85% of the time
-      if (Math.random() < 0.85) {
+      const pitW = 92 + Math.random() * 34;
+      // Bridge platform above pit 65% of the time
+      if (Math.random() < 0.65) {
         platforms.push({
-          x: cursor - 22,
-          y: groundY - 82,
-          w: pitW + 44
+          x: cursor - 15,
+          y: groundY - 84,
+          w: pitW + 30
         });
       }
       cursor += pitW;
 
-      const segLen = 360 + Math.random() * 260;
+      const segLen = 320 + Math.random() * 260;
       groundSegments.push({ x1: cursor, x2: cursor + segLen });
 
       // Add tier-1 and tier-2 tactical platforms
-      const p1W = 145 + Math.random() * 90;
+      const p1W = 130 + Math.random() * 90;
       const p1X = cursor + 35 + Math.random() * 60;
-      platforms.push({ x: p1X, y: groundY - 88, w: p1W });
+      platforms.push({ x: p1X, y: groundY - 90, w: p1W });
 
       if (Math.random() < 0.65) {
         platforms.push({
           x: p1X + 40,
-          y: groundY - 170,
-          w: 130
+          y: groundY - 174,
+          w: 120
         });
       }
 
-      // Place Snipers & Armored Turrets with relaxed HP & slower fire rate
+      // Place Snipers & Armored Turrets along segment
       enemies.push({
         type: 'sniper',
         x: p1X + p1W * 0.55,
-        y: groundY - 88 - 26,
+        y: groundY - 90 - 26,
         vx: 0,
         vy: 0,
         w: 26,
         h: 48,
-        hp: 1,
-        maxHp: 1,
-        shootTimer: 95 + Math.random() * 65
+        hp: 2 + Math.floor(stageNum * 0.5),
+        maxHp: 2 + Math.floor(stageNum * 0.5),
+        shootTimer: 50 + Math.random() * 50
       });
 
       enemies.push({
@@ -239,21 +230,21 @@
         y: groundY - 22,
         w: 38,
         h: 38,
-        hp: 3 + Math.floor(stageNum * 0.5),
-        maxHp: 3 + Math.floor(stageNum * 0.5),
+        hp: 5 + stageNum,
+        maxHp: 5 + stageNum,
         angle: Math.PI,
-        shootTimer: 110 + Math.random() * 60
+        shootTimer: 65 + Math.random() * 45
       });
 
-      // Pre-place frequent weapon & health capsules
-      if (Math.random() < 0.88) {
-        const types = ['S', 'L', 'F', '♥', 'S'];
+      // Pre-place flying weapon capsule triggers
+      if (Math.random() < 0.75) {
+        const types = ['S', 'L', 'F', 'S', '♥'];
         capsules.push({
           triggerX: cursor + 80,
           spawned: false,
           x: 0,
-          y: groundY - 190,
-          baseY: groundY - 190,
+          y: groundY - 195,
+          baseY: groundY - 195,
           phase: 0,
           item: types[Math.floor(Math.random() * types.length)]
         });
@@ -264,12 +255,12 @@
 
     // Boss Arena flat ground + 2 tactical combat platforms
     groundSegments.push({ x1: cursor, x2: stageLength + 600 });
-    platforms.push({ x: stageLength - 390, y: groundY - 90, w: 140 });
-    platforms.push({ x: stageLength - 240, y: groundY - 172, w: 125 });
+    platforms.push({ x: stageLength - 380, y: groundY - 92, w: 125 });
+    platforms.push({ x: stageLength - 240, y: groundY - 175, w: 115 });
 
-    // Create End-of-Stage Cyber Fortress Boss Wall (balanced HP)
-    const coreHp = 38 + (stageNum - 1) * 16;
-    const gunHp = 12 + (stageNum - 1) * 5;
+    // Create End-of-Stage Cyber Fortress Boss Wall (Original Tough HP)
+    const coreHp = 60 + (stageNum - 1) * 25;
+    const gunHp = 20 + (stageNum - 1) * 8;
     boss = {
       x: stageLength + 30,
       w: 150,
@@ -604,10 +595,10 @@
     }
 
     player.lives -= 1;
-    // Keep current upgraded weapon so taking a hit doesn't punish firepower!
-    screenShake = 10;
+    player.weapon = 'M';
+    screenShake = 12;
     window.soundFX.playerHurt();
-    addParticles(player.x, player.y, '#ff2a85', '#fbbf24', 24);
+    addParticles(player.x, player.y, '#ff2a85', '#fbbf24', 26);
     updateMetaHUD();
 
     if (player.lives <= 0) {
@@ -615,8 +606,8 @@
       return;
     }
 
-    // Respawn safely with generous 2.6s invulnerability shield
-    player.invulnTimer = 155;
+    // Respawn safely above nearest solid ground
+    player.invulnTimer = 120;
     player.vy = -4;
     player.y = groundY - 190;
     let safeX = Math.max(cameraX + 90, player.x - 40);
@@ -694,6 +685,11 @@
     let aimD = input.down || touchState.joyY > 0.35;
     let wantFire = input.fire || touchState.fire;
     let wantJump = input.jumpPressed || touchState.jump;
+
+    // Strictly forbid AI Auto-Pilot during real player mode!
+    if (!isDemoAI) {
+      aiEnabled = false;
+    }
 
     if (aiEnabled) {
       const aiCmd = computeContraAI();
@@ -776,7 +772,7 @@
       } else {
         player.recentPlatformTimer = 0;
       }
-      player.vy = -11.3;
+      player.vy = -10.8;
       player.onGround = false;
       player.crouching = false;
       window.soundFX.jump();
@@ -791,7 +787,7 @@
 
     // Apply Gravity & Move Player
     const prevBottom = player.y + player.h * 0.5;
-    player.vy = Math.min(10.5, player.vy + 0.43 * dt);
+    player.vy = Math.min(12.5, player.vy + 0.48 * dt);
     player.x += player.vx * dt;
     player.y += player.vy * dt;
 
@@ -840,14 +836,14 @@
       }
     }
 
-    // Pit Fall Check: auto jet-rescue bounce out of pit instead of harsh instant death!
-    if (player.y > viewH + 35) {
-      player.vy = -13.2;
-      player.y = groundY - 40;
-      player.x += player.facing * 48;
-      if (!aiEnabled && player.invulnTimer <= 0) {
-        player.invulnTimer = 95;
-        showToast('🚀 Đệm Phản Lực Cứu Hộ!', 'Đã đẩy bạn thoát khỏi hố vực!');
+    // Pit Fall Check
+    if (player.y > viewH + 50) {
+      if (aiEnabled) {
+        player.vy = -12;
+        player.y = groundY - 120;
+        player.x += 55;
+      } else {
+        damagePlayer();
       }
     }
 
@@ -871,16 +867,16 @@
       firePlayerWeapon();
     }
 
-    // Dynamic Wave Spawns (Relaxed runner & drone pacing)
+    // Dynamic Wave Spawns (Original intense pacing)
     spawnWaveTimer -= dt;
     if (spawnWaveTimer <= 0) {
-      spawnWaveTimer = bossLocked ? 130 : Math.max(90, 140 - stage * 7);
+      spawnWaveTimer = bossLocked ? 95 : Math.max(46, 84 - stage * 6);
       if (!bossLocked) {
         enemies.push({
           type: 'runner',
           x: cameraX + viewW + 30,
           y: groundY - 24,
-          vx: -(1.75 + Math.min(1.1, stage * 0.16)),
+          vx: -(2.5 + Math.min(1.8, stage * 0.25)),
           vy: 0,
           w: 24,
           h: 46,
@@ -888,19 +884,19 @@
           maxHp: 1,
           onGround: true
         });
-        if (Math.random() < 0.3) {
+        if (Math.random() < 0.42) {
           enemies.push({
             type: 'drone',
             x: cameraX + viewW + 40,
             y: groundY - 165 - Math.random() * 55,
             baseY: groundY - 175,
             phase: Math.random() * Math.PI * 2,
-            vx: -1.7,
+            vx: -2.2,
             w: 30,
             h: 24,
-            hp: 1,
-            maxHp: 1,
-            shootTimer: 95
+            hp: 2,
+            maxHp: 2,
+            shootTimer: 55
           });
         }
       } else if (boss && !boss.defeated) {
@@ -958,10 +954,10 @@
       }
 
       // Player pickup check
-      if (Math.hypot(pw.x - player.x, pw.y - player.y) < 38) {
+      if (Math.hypot(pw.x - player.x, pw.y - player.y) < 34) {
         window.soundFX.powerup();
         if (pw.item === '♥') {
-          player.lives = Math.min(7, player.lives + 1);
+          player.lives = Math.min(5, player.lives + 1);
           showToast('❤️ Tiếp tế Quân Y!', '+1 Mạng chiến đấu');
         } else {
           player.weapon = pw.item;
@@ -1083,8 +1079,8 @@
       }
     }
 
-    // Update Active Enemies (smaller forgiving player hitbox & slower enemy projectiles)
-    const pHitH = player.crouching ? 16 : 28;
+    // Update Active Enemies (Original tough hitboxes & fast projectiles)
+    const pHitH = player.crouching ? 26 : 44;
     const pCenterY = player.crouching ? player.y + 12 : player.y;
 
     for (let i = enemies.length - 1; i >= 0; i--) {
@@ -1093,11 +1089,10 @@
         enemies.splice(i, 1);
         continue;
       }
-      if (en.x > cameraX + viewW + 90) continue; // dormant until near screen
+      if (en.x > cameraX + viewW + 90) continue;
 
       if (en.type === 'runner') {
         en.x += en.vx * dt;
-        // Runner jumps automatically if pit ahead!
         if (en.onGround && !isOverSolidGround(en.x - 20)) {
           en.vy = -9.2;
           en.onGround = false;
@@ -1115,38 +1110,38 @@
         }
       } else if (en.type === 'drone') {
         en.x += en.vx * dt;
-        en.phase += 0.055 * dt;
-        en.y = en.baseY + Math.sin(en.phase) * 26;
+        en.phase += 0.065 * dt;
+        en.y = en.baseY + Math.sin(en.phase) * 32;
         en.shootTimer -= dt;
         if (en.shootTimer <= 0) {
-          en.shootTimer = 135;
+          en.shootTimer = 85;
           const a = Math.atan2(pCenterY - en.y, player.x - en.x);
-          enemyBullets.push({ x: en.x, y: en.y, vx: Math.cos(a) * 2.9, vy: Math.sin(a) * 2.9, r: 5 });
+          enemyBullets.push({ x: en.x, y: en.y, vx: Math.cos(a) * 4.4, vy: Math.sin(a) * 4.4, r: 5 });
         }
       } else if (en.type === 'sniper' || en.type === 'turret') {
         const ang = Math.atan2(pCenterY - en.y, player.x - en.x);
         en.angle = ang;
         en.shootTimer -= dt;
         if (en.shootTimer <= 0) {
-          en.shootTimer = en.type === 'turret' ? Math.max(95, 138 - stage * 5) : Math.max(105, 148 - stage * 5);
-          const spd = en.type === 'turret' ? 3.2 : 2.85;
+          en.shootTimer = en.type === 'turret' ? Math.max(48, 82 - stage * 5) : Math.max(55, 92 - stage * 5);
+          const spd = en.type === 'turret' ? 4.8 : 4.3;
           enemyBullets.push({
             x: en.x + Math.cos(ang) * 16,
             y: en.y + Math.sin(ang) * 16,
             vx: Math.cos(ang) * spd,
             vy: Math.sin(ang) * spd,
-            r: 5
+            r: 5.5
           });
         }
       }
 
       // Direct contact damage
-      if (Math.abs(en.x - player.x) < (en.w + 14) * 0.45 && Math.abs(en.y - pCenterY) < (en.h + pHitH) * 0.42) {
+      if (Math.abs(en.x - player.x) < (en.w + 20) * 0.5 && Math.abs(en.y - pCenterY) < (en.h + pHitH) * 0.45) {
         damagePlayer();
       }
     }
 
-    // Update Boss AI & Boss HUD (fair, readable bullet patterns)
+    // Update Boss AI & Boss HUD
     if (boss && boss.active && !boss.defeated) {
       if (boss.core.flash > 0) boss.core.flash -= dt;
 
@@ -1161,19 +1156,18 @@
         if (t.hp <= 0) continue;
         t.shootTimer -= dt;
         if (t.shootTimer <= 0) {
-          t.shootTimer = t.kind === 'laser' ? Math.max(85, 122 - stage * 5) : Math.max(105, 142 - stage * 5);
+          t.shootTimer = t.kind === 'laser' ? Math.max(46, 76 - stage * 5) : Math.max(64, 96 - stage * 5);
           if (t.kind === 'laser') {
             const a = Math.atan2(pCenterY - t.y, player.x - t.x);
-            enemyBullets.push({ x: t.x - 12, y: t.y, vx: Math.cos(a) * 3.4, vy: Math.sin(a) * 3.4, r: 5.5 });
+            enemyBullets.push({ x: t.x - 12, y: t.y, vx: Math.cos(a) * 5.2, vy: Math.sin(a) * 5.2, r: 6 });
           } else {
-            // Arcing plasma mortar shell
             enemyBullets.push({
               x: t.x - 12,
               y: t.y,
-              vx: -(2.8 + Math.random() * 1.8),
-              vy: -5.8,
-              gravity: 0.15,
-              r: 6.5
+              vx: -(3.6 + Math.random() * 2.2),
+              vy: -6.5,
+              gravity: 0.18,
+              r: 7
             });
           }
         }
@@ -1182,16 +1176,16 @@
       // Boss Core radial burst
       boss.core.shootTimer -= dt;
       if (boss.core.shootTimer <= 0) {
-        const enraged = boss.core.hp < boss.core.maxHp * 0.45;
-        boss.core.shootTimer = enraged ? 98 : 132;
-        const angles = enraged ? [Math.PI - 0.3, Math.PI, Math.PI + 0.3] : [Math.PI - 0.16, Math.PI + 0.16];
+        const enraged = boss.core.hp < boss.core.maxHp * 0.5;
+        boss.core.shootTimer = enraged ? 62 : 92;
+        const angles = enraged ? [Math.PI - 0.35, Math.PI, Math.PI + 0.35] : [Math.PI - 0.18, Math.PI + 0.18];
         angles.forEach((a) => {
           enemyBullets.push({
             x: boss.core.x - 20,
             y: boss.core.y,
-            vx: Math.cos(a) * 3.3,
-            vy: Math.sin(a) * 3.3,
-            r: 6
+            vx: Math.cos(a) * 4.8,
+            vy: Math.sin(a) * 4.8,
+            r: 6.5
           });
         });
       }
@@ -1209,7 +1203,7 @@
         continue;
       }
 
-      if (Math.abs(eb.x - player.x) < 9 + eb.r && Math.abs(eb.y - pCenterY) < pHitH * 0.42 + eb.r) {
+      if (Math.abs(eb.x - player.x) < 13 + eb.r && Math.abs(eb.y - pCenterY) < pHitH * 0.45 + eb.r) {
         enemyBullets.splice(i, 1);
         damagePlayer();
       }
@@ -1691,12 +1685,13 @@
 
   // --- Start / Reset Campaign ---
   function startNewCampaign(withAI = false) {
-    aiEnabled = withAI;
+    // Only allow AI if page was explicitly opened in Demo Showcase mode (?autoplay=1)
+    aiEnabled = isDemoAI ? Boolean(withAI) : false;
     syncAIBarUI();
     score = 0;
     lastRunVoucher = null;
-    player.lives = 5;
-    player.weapon = withAI ? 'S' : 'M';
+    player.lives = 3;
+    player.weapon = aiEnabled ? 'S' : 'M';
     currentCharId = Hub.getSelectedCharacterId(isDemoAI);
     hudScore.textContent = '0';
 
@@ -1708,11 +1703,15 @@
   }
 
   function syncAIBarUI() {
-    cAiDot.classList.toggle('off', !aiEnabled);
-    cAiLabel.textContent = aiEnabled ? 'AI AUTO-PILOT: ĐANG CÀN QUÉT' : 'CHẾ ĐỘ BẠN TỰ LÁI';
-    btnToggleContraAI.classList.toggle('active', aiEnabled);
-    btnToggleContraAI.textContent = aiEnabled ? '🤖 AI Đang Lái' : '🤖 Bật AI Phá Đảo';
-    btnContraEndNow.classList.toggle('hidden', !aiEnabled);
+    const aiBar = document.getElementById('contraAiBar');
+    if (!isDemoAI) {
+      aiBar.classList.add('hidden');
+      return;
+    }
+    aiBar.classList.remove('hidden');
+    cAiDot.classList.remove('off');
+    cAiLabel.textContent = 'CHẾ ĐỘ XEM AI VẬN HÀNH';
+    btnContraEndNow.classList.remove('hidden');
   }
 
   // --- Input Bindings (Keyboard, Mouse, Virtual Touch Joystick) ---
@@ -1875,13 +1874,8 @@
   });
 
   btnToggleContraAI.addEventListener('click', () => {
-    aiEnabled = !aiEnabled;
-    if (aiEnabled && gameState === 'START') {
-      startNewCampaign(true);
-    } else {
-      syncAIBarUI();
-    }
-    window.soundFX.click();
+    // Disabled in normal play mode so players cannot toggle AI mid-game
+    if (!isDemoAI) return;
   });
 
   document.querySelectorAll('.c-speed').forEach((btn) => {

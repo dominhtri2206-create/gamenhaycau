@@ -19,7 +19,7 @@
       <div class="c-hud-left">
         <a href="index.html" class="c-pill-btn" title="Về Cổng Game">🏠 Cổng Game</a>
         <div class="c-stat-chip">
-          <span id="hudLives">❤️❤️❤️❤️❤️</span>
+          <span id="hudLives">❤️❤️❤️</span>
         </div>
         <div class="c-stat-chip weapon-chip">
           🔫 <strong id="hudWeapon">M • RIFLE</strong>
@@ -66,18 +66,18 @@
       </div>
     </div>
 
-    <!-- AI Auto-Pilot Showcase Bar -->
-    <aside id="contraAiBar" class="c-ai-bar">
+    <!-- AI Auto-Pilot Showcase Bar (strictly hidden during normal play!) -->
+    <aside id="contraAiBar" class="c-ai-bar hidden">
       <div class="c-ai-left">
-        <span id="cAiDot" class="c-ai-dot off"></span>
-        <span id="cAiLabel">CHẾ ĐỘ TỰ CHƠI</span>
+        <span id="cAiDot" class="c-ai-dot"></span>
+        <span id="cAiLabel">CHẾ ĐỘ XEM AI VẬN HÀNH</span>
       </div>
       <div class="c-ai-controls">
-        <button id="btnToggleContraAI" class="c-chip">🤖 Bật AI Phá Đảo</button>
+        <button id="btnToggleContraAI" class="c-chip hidden">🤖 AI Đang Lái</button>
         <button class="c-chip c-speed active" data-spd="1">1x</button>
         <button class="c-chip c-speed" data-spd="2">2x</button>
         <button class="c-chip c-speed" data-spd="4">4x</button>
-        <button id="btnContraEndNow" class="c-chip danger hidden">🏆 Xem Tổng Kết</button>
+        <button id="btnContraEndNow" class="c-chip danger">🏆 Xem Tổng Kết</button>
       </div>
     </aside>
 
@@ -114,7 +114,8 @@
 
         <div class="c-row-btns">
           <button id="btnContraPickChar" class="c-sec-btn">✨ Đổi Nhân Vật</button>
-          <button id="btnContraStartAI" class="c-sec-btn">🤖 Ngồi Xem AI Phá Đảo</button>
+          <a href="index.html" class="c-sec-btn" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🏠 Về Cổng Game</a>
+          <button id="btnContraStartAI" class="c-sec-btn hidden">🤖 AI</button>
         </div>
       </div>
     </section>

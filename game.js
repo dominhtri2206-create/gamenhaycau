@@ -148,10 +148,10 @@
     wingPhase: 0
   };
 
-  // Physics constants normalized to 60 FPS (dynamically scaled on short mobile landscape screens)
-  let GRAVITY = 0.33;
-  let FLAP_IMPULSE = -7.0;
-  let MAX_FALL_SPEED = 8.5;
+  // Physics constants normalized to 60 FPS (Original challenging arcade feel)
+  let GRAVITY = 0.44;
+  let FLAP_IMPULSE = -8.1;
+  let MAX_FALL_SPEED = 11.5;
 
   let pipes = [];
   let pipeTimer = 0;
@@ -179,14 +179,14 @@
     const playH = viewHeight - groundHeight;
     if (playH < 430) {
       bird.radius = 13;
-      GRAVITY = 0.27;
-      FLAP_IMPULSE = -5.6;
-      MAX_FALL_SPEED = 7.2;
+      GRAVITY = 0.36;
+      FLAP_IMPULSE = -6.8;
+      MAX_FALL_SPEED = 9.8;
     } else {
       bird.radius = 17;
-      GRAVITY = 0.33;
-      FLAP_IMPULSE = -7.0;
-      MAX_FALL_SPEED = 8.5;
+      GRAVITY = 0.44;
+      FLAP_IMPULSE = -8.1;
+      MAX_FALL_SPEED = 11.5;
     }
 
     bird.x = Math.min(viewWidth * 0.24, 190);
@@ -248,16 +248,16 @@
     document.body.setAttribute('data-theme', targetDayBlend > 0.5 ? 'day' : 'night');
   }
 
-  // --- Difficulty Scaling (Friendly & Responsive to Landscape Height) ---
+  // --- Difficulty Scaling (Original Challenging Curve) ---
   function getDifficultyParams(pts) {
     const playH = Math.max(260, viewHeight - groundHeight);
-    const hScale = Math.min(1, Math.max(0.68, playH / 520));
-    const level = Math.min(8, Math.floor(pts / 12) + 1);
-    const speed = Math.min(4.1, 2.35 + pts * 0.02);
-    const baseGap = Math.max(168, 215 - pts * 0.35);
+    const hScale = playH < 430 ? Math.max(0.76, playH / 460) : 1;
+    const level = Math.min(8, Math.floor(pts / 10) + 1);
+    const speed = Math.min(5.6, 3.0 + pts * 0.032);
+    const baseGap = Math.max(132, 174 - pts * 0.45);
     const gap = Math.round(baseGap * hScale);
-    const spawnInterval = Math.max(88, 118 - pts * 0.25);
-    const movingChance = pts >= 30 ? Math.min(0.35, (pts - 25) * 0.01) : 0;
+    const spawnInterval = Math.max(66, 98 - pts * 0.32);
+    const movingChance = pts >= 20 ? Math.min(0.65, (pts - 15) * 0.015) : 0;
     return { level, speed, gap, spawnInterval, movingChance, gravity: GRAVITY, flapImpulse: FLAP_IMPULSE, maxFall: MAX_FALL_SPEED };
   }
 
@@ -454,7 +454,7 @@
     let hi = maxTop;
     if (pipes.length > 0) {
       const prevTop = pipes[pipes.length - 1].baseTop;
-      const maxDelta = playHeight < 430 ? 115 : 170;
+      const maxDelta = playHeight < 430 ? 135 : 220;
       lo = Math.max(minTop, prevTop - maxDelta);
       hi = Math.min(maxTop, prevTop + maxDelta);
     }
@@ -470,7 +470,7 @@
       passed: false,
       isMoving,
       movePhase: Math.random() * Math.PI * 2,
-      moveAmp: isMoving ? Math.min(22, (maxTop - minTop) * 0.18) : 0
+      moveAmp: isMoving ? Math.min(playHeight < 430 ? 24 : 34, (maxTop - minTop) * 0.25) : 0
     });
   }
 
@@ -523,14 +523,14 @@
         spawnPipe();
       }
 
-      // Update pipes & check collisions (generous hitbox)
-      const hitRadius = bird.radius - 5;
+      // Update pipes & check collisions
+      const hitRadius = bird.radius - (viewHeight - groundHeight < 430 ? 2 : 3);
       for (let i = pipes.length - 1; i >= 0; i--) {
         const p = pipes[i];
         p.x -= params.speed * dt;
 
         if (p.isMoving) {
-          p.movePhase += 0.022 * dt;
+          p.movePhase += 0.035 * dt;
           p.topHeight = p.baseTop + Math.sin(p.movePhase) * p.moveAmp;
         }
 
