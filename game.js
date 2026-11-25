@@ -14,42 +14,41 @@
 
   const SKINS = [
     {
-      id: 'cyber_bird',
-      name: 'Cyber Bird',
-      desc: 'Chim Neon cổ điển',
-      emoji: '🐦',
+      id: 'char_1',
+      name: 'Chiến Binh Cyber',
+      desc: 'Hào quang Xanh Neon',
+      avatar: 'assets/char1.png',
       primary: '#00f5d4',
       secondary: '#ff2a85',
       glow: '#00f5d4'
     },
     {
-      id: 'neon_coffee',
-      name: 'Neon Latte',
-      desc: 'Ly cà phê bay lượn',
-      emoji: '☕',
-      primary: '#fbbf24',
-      secondary: '#f97316',
-      glow: '#fbbf24'
-    },
-    {
-      id: 'plasma_orb',
-      name: 'Plasma Drone',
-      desc: 'Cầu năng lượng tím',
-      emoji: '🔮',
-      primary: '#a855f7',
+      id: 'char_2',
+      name: 'Kỵ Sĩ Bóng Đêm',
+      desc: 'Hào quang Tím Plasma',
+      avatar: 'assets/char2.png',
+      primary: '#c084fc',
       secondary: '#38bdf8',
       glow: '#c084fc'
     },
     {
-      id: 'prism_wing',
-      name: 'Crimson Jet',
-      desc: 'Phi cơ ánh sáng đỏ',
-      emoji: '🚀',
-      primary: '#fb7185',
-      secondary: '#fde047',
-      glow: '#ff2a85'
+      id: 'char_3',
+      name: 'Thủ Lĩnh Ánh Sáng',
+      desc: 'Hào quang Vàng Kim',
+      avatar: 'assets/char3.png',
+      primary: '#fbbf24',
+      secondary: '#fb7185',
+      glow: '#fbbf24'
     }
   ];
+
+  // Preload character portrait images
+  const skinImages = {};
+  SKINS.forEach((s) => {
+    const img = new Image();
+    img.src = s.avatar;
+    skinImages[s.id] = img;
+  });
 
   const MEDALS = [
     { min: 100, key: 'platinum', name: 'Bạch Kim', emoji: '💎' },
@@ -80,7 +79,11 @@
   }
 
   let bestScore = parseInt(localStorage.getItem(STORAGE_KEYS.BEST_SCORE) || '0', 10) || 0;
-  let currentSkinId = localStorage.getItem(STORAGE_KEYS.SKIN) || 'cyber_bird';
+  let currentSkinId = localStorage.getItem(STORAGE_KEYS.SKIN) || 'char_1';
+  if (!SKINS.some((s) => s.id === currentSkinId)) {
+    currentSkinId = SKINS[0].id;
+    localStorage.setItem(STORAGE_KEYS.SKIN, currentSkinId);
+  }
   let themeMode = localStorage.getItem(STORAGE_KEYS.THEME_MODE) || 'auto'; // 'night' | 'day' | 'auto'
   let wallet = loadJSON(STORAGE_KEYS.WALLET, []);
   let shopConfig = loadJSON(STORAGE_KEYS.SHOP_CONFIG, DEFAULT_SHOP_CONFIG);
@@ -690,115 +693,74 @@
 
   function drawBird() {
     const skin = getSelectedSkin();
+    const img = skinImages[skin.id];
+    const visR = 23; // Balanced visual size while keeping bird.radius = 17 for forgiving hitbox
+    const wingFlap = Math.sin(bird.wingPhase) * 7;
+    const tilt = Math.max(-0.42, Math.min(0.48, bird.rotation * 0.65));
+
     ctx.save();
     ctx.translate(bird.x, bird.y);
-    ctx.rotate(bird.rotation);
+    ctx.rotate(tilt);
 
+    // 1. Animated Neon Cyber Wings behind character
+    ctx.save();
+    ctx.shadowColor = skin.secondary;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = skin.secondary;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.6;
+
+    // Upper back wing feather
+    ctx.beginPath();
+    ctx.moveTo(-visR + 6, -2);
+    ctx.quadraticCurveTo(-visR - 18, -14 + wingFlap, -visR - 11, 2 + wingFlap * 0.6);
+    ctx.quadraticCurveTo(-visR - 4, 5, -visR + 6, 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Secondary lower wing feather
+    ctx.fillStyle = skin.primary;
+    ctx.beginPath();
+    ctx.moveTo(-visR + 7, 3);
+    ctx.quadraticCurveTo(-visR - 13, -4 + wingFlap * 0.8, -visR - 7, 9 + wingFlap * 0.5);
+    ctx.quadraticCurveTo(-visR - 1, 9, -visR + 7, 7);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // 2. Circular Character Portrait
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(0, 0, visR, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+
+    if (img && img.complete && img.naturalWidth > 0) {
+      ctx.drawImage(img, -visR, -visR, visR * 2, visR * 2);
+    } else {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(-visR, -visR, visR * 2, visR * 2);
+    }
+    ctx.restore();
+
+    // 3. Glowing Neon Halo Ring & Crisp Inner Rim
+    ctx.save();
     ctx.shadowColor = skin.glow;
     ctx.shadowBlur = dayBlend < 0.5 ? 18 : 10;
+    ctx.strokeStyle = skin.primary;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, visR, 0, Math.PI * 2);
+    ctx.stroke();
 
-    const wingOffset = Math.sin(bird.wingPhase) * 5;
-
-    if (skin.id === 'neon_coffee') {
-      // Stylized Neon Coffee Cup with glowing wings
-      ctx.fillStyle = '#1e1b4b';
-      ctx.strokeStyle = skin.primary;
-      ctx.lineWidth = 2.6;
-
-      // Cup body
-      ctx.beginPath();
-      ctx.moveTo(-13, -12);
-      ctx.lineTo(13, -12);
-      ctx.lineTo(10, 14);
-      ctx.lineTo(-10, 14);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // Lid
-      ctx.fillStyle = skin.secondary;
-      ctx.fillRect(-15, -16, 30, 5);
-
-      // Sleeve & Wing
-      ctx.fillStyle = skin.primary;
-      ctx.fillRect(-11, -3, 22, 8);
-
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      ctx.moveTo(-4, 0);
-      ctx.quadraticCurveTo(-18, -8 + wingOffset, -14, 6 + wingOffset);
-      ctx.stroke();
-    } else if (skin.id === 'plasma_orb') {
-      // Plasma Drone Orb + Orbit Ring
-      ctx.fillStyle = skin.primary;
-      ctx.beginPath();
-      ctx.arc(0, 0, bird.radius - 2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(4, -3, 5, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = skin.secondary;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, bird.radius + 5, 6 + Math.abs(wingOffset) * 0.4, -0.35, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (skin.id === 'prism_wing') {
-      // Sleek Crimson Neon Jet
-      ctx.fillStyle = '#0f172a';
-      ctx.strokeStyle = skin.primary;
-      ctx.lineWidth = 2.6;
-      ctx.beginPath();
-      ctx.moveTo(20, 0);
-      ctx.lineTo(-15, -13);
-      ctx.lineTo(-9, 0);
-      ctx.lineTo(-15, 13);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // Thruster flame
-      ctx.fillStyle = skin.secondary;
-      ctx.beginPath();
-      ctx.moveTo(-11, -4);
-      ctx.lineTo(-22 - Math.abs(wingOffset), 0);
-      ctx.lineTo(-11, 4);
-      ctx.closePath();
-      ctx.fill();
-    } else {
-      // Default Cyber Bird
-      ctx.fillStyle = '#0b132b';
-      ctx.strokeStyle = skin.primary;
-      ctx.lineWidth = 2.8;
-      ctx.beginPath();
-      ctx.arc(0, 0, bird.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      // Neon Wing
-      ctx.fillStyle = skin.secondary;
-      ctx.beginPath();
-      ctx.ellipse(-4, 2 + wingOffset * 0.6, 10, 6, -0.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Glowing Eye
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(7, -5, 4.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Beak
-      ctx.fillStyle = '#fbbf24';
-      ctx.beginPath();
-      ctx.moveTo(15, -3);
-      ctx.lineTo(25, 2);
-      ctx.lineTo(15, 6);
-      ctx.closePath();
-      ctx.fill();
-    }
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0, 0, visR - 2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
 
     ctx.restore();
   }
@@ -926,7 +888,9 @@
       const div = document.createElement('div');
       div.className = 'skin-item' + (s.id === currentSkinId ? ' selected' : '');
       div.innerHTML = `
-        <div class="skin-preview" style="background: ${s.primary}22; border: 1px solid ${s.primary}">${s.emoji}</div>
+        <div class="skin-preview" style="border: 2px solid ${s.primary}; box-shadow: 0 0 12px ${s.primary}66">
+          <img src="${s.avatar}" alt="${s.name}" class="skin-avatar-img" />
+        </div>
         <div>
           <div class="skin-info-name">${s.name}</div>
           <div class="skin-info-desc">${s.desc}</div>

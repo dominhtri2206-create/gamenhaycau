@@ -199,14 +199,14 @@
         return;
       }
 
-      // Optional auto-cycle skin every 10 points so viewer sees all 4 skins in action
+      // Optional auto-cycle skin every 10 points so viewer sees all 3 characters in action
       if (aiConfig.autoCycleSkin && state.score > 0 && state.score % 10 === 0 && state.score !== lastSkinSwapScore) {
         lastSkinSwapScore = state.score;
         const skins = state.skins;
         const idx = skins.findIndex((s) => s.id === state.currentSkinId);
         const nextSkin = skins[(idx + 1) % skins.length];
         api.setSkin(nextSkin.id);
-        api.showToast(`✨ Đổi Skin: ${nextSkin.emoji} ${nextSkin.name}`, nextSkin.desc);
+        api.showToast(`✨ Đổi nhân vật: ${nextSkin.name}`, nextSkin.desc);
       }
 
       // Optional auto-stop at 105 points (Platinum Medal + all Vouchers unlocked)

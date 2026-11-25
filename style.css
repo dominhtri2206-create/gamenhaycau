@@ -589,36 +589,50 @@ body[data-theme="day"] .copy-btn {
 }
 
 .skin-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
 .skin-item {
-  padding: 12px;
-  border-radius: 14px;
+  padding: 10px 14px;
+  border-radius: 16px;
   border: 1.5px solid rgba(255, 255, 255, 0.1);
   background: var(--surface-soft);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  gap: 14px;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.skin-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 245, 212, 0.45);
 }
 
 .skin-item.selected {
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 16px rgba(0, 245, 212, 0.25);
+  box-shadow: 0 0 18px rgba(0, 245, 212, 0.28);
 }
 
 .skin-preview {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
+  background: #0f172a;
+}
+
+.skin-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .skin-info-name {
