@@ -14,13 +14,17 @@
   let debugAim = null;
 
   // Exact frame-by-frame trajectory check: if we flap right now, will the upward arc hit any top pipe?
-  function isFlapSafeFromTop(bird, pipes, speed, safetyMargin) {
-    const hitR = bird.radius - 5; // 12
+  function isFlapSafeFromTop(bird, pipes, params, safetyMargin) {
+    const speed = params.speed;
+    const grav = params.gravity || 0.33;
+    const impulse = params.flapImpulse || -7.0;
+    const maxFall = params.maxFall || 8.5;
+    const hitR = bird.radius - 5;
     let y = bird.y;
-    let vy = -7.0;
+    let vy = impulse;
 
     for (let t = 1; t <= 28; t++) {
-      vy = Math.min(8.5, vy + 0.33);
+      vy = Math.min(maxFall, vy + grav);
       y += vy;
 
       if (y - bird.radius < 2) return false;
@@ -45,9 +49,13 @@
   }
 
   // Exact frame-by-frame check: if we wait 1 frame and only flap NEXT frame, would we clip a bottom pipe or floor?
-  function wouldWaitClipBottom(bird, pipes, speed, playHeight, safetyMargin) {
+  function wouldWaitClipBottom(bird, pipes, params, playHeight, safetyMargin) {
+    const speed = params.speed;
+    const grav = params.gravity || 0.33;
+    const impulse = params.flapImpulse || -7.0;
+    const maxFall = params.maxFall || 8.5;
     const hitR = bird.radius - 5;
-    let vy = Math.min(8.5, bird.vy + 0.33);
+    let vy = Math.min(maxFall, bird.vy + grav);
     let y = bird.y + vy;
 
     if (y + bird.radius >= playHeight - 4) return true;
@@ -63,9 +71,9 @@
       }
     }
 
-    vy = -7.0;
+    vy = impulse;
     for (let t = 2; t <= 12; t++) {
-      vy = Math.min(8.5, vy + 0.33);
+      vy = Math.min(maxFall, vy + grav);
       y += vy;
       if (y + bird.radius >= playHeight - 4) return true;
 
@@ -133,11 +141,11 @@
     const gap = aimPipe.gap;
     const predCenterY = predTop + gap * 0.5;
 
-    const idealTriggerY = predTop + gap - 36;
+    const idealTriggerY = predTop + gap - Math.min(36, gap * 0.24);
 
-    const topSafeStrict = isFlapSafeFromTop(bird, pipes, speed, 4.5);
-    const topSafeEmergency = isFlapSafeFromTop(bird, pipes, speed, 0.8);
-    const urgentBottom = wouldWaitClipBottom(bird, pipes, speed, playHeight, 5.5);
+    const topSafeStrict = isFlapSafeFromTop(bird, pipes, params, 4.0);
+    const topSafeEmergency = isFlapSafeFromTop(bird, pipes, params, 0.8);
+    const urgentBottom = wouldWaitClipBottom(bird, pipes, params, playHeight, 5.0);
 
     let shouldFlap = false;
 

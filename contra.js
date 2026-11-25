@@ -127,12 +127,36 @@
 
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    viewW = window.innerWidth;
-    viewH = window.innerHeight;
+    const vp = window.MobileLandscape
+      ? window.MobileLandscape.getViewport()
+      : { width: window.innerWidth, height: window.innerHeight };
+    const oldGroundY = groundY;
+    viewW = vp.width;
+    viewH = vp.height;
     canvas.width = Math.floor(viewW * dpr);
     canvas.height = Math.floor(viewH * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    groundY = Math.max(320, viewH - 115);
+    groundY = viewH <= 480 ? Math.max(270, viewH - 48) : Math.max(330, viewH - 110);
+
+    // Shift world entities smoothly if screen orientation changed mid-game!
+    if (oldGroundY && oldGroundY !== groundY && groundSegments.length > 0) {
+      const dy = groundY - oldGroundY;
+      player.y += dy;
+      platforms.forEach((pf) => (pf.y += dy));
+      enemies.forEach((en) => {
+        en.y += dy;
+        if (en.baseY) en.baseY += dy;
+      });
+      capsules.forEach((c) => {
+        c.y += dy;
+        c.baseY += dy;
+      });
+      powerups.forEach((pw) => (pw.y += dy));
+      if (boss) {
+        boss.core.y += dy;
+        boss.turrets.forEach((t) => (t.y += dy));
+      }
+    }
   }
 
   // --- Stage Generation ---
@@ -1726,17 +1750,24 @@
 
   canvas.addEventListener('pointerdown', (e) => {
     window.soundFX.init();
-    if (!aiEnabled && gameState === 'PLAYING') {
+    const useCanvasAim = e.pointerType === 'mouse' || touchControls.classList.contains('hidden');
+    if (!aiEnabled && gameState === 'PLAYING' && useCanvasAim) {
+      const pt = window.MobileLandscape
+        ? window.MobileLandscape.toGamePoint(e.clientX, e.clientY)
+        : { x: e.clientX, y: e.clientY };
       input.fire = true;
       input.mouseFiring = true;
-      input.mouseX = e.clientX;
-      input.mouseY = e.clientY;
+      input.mouseX = pt.x;
+      input.mouseY = pt.y;
     }
   });
   canvas.addEventListener('pointermove', (e) => {
     if (input.mouseFiring) {
-      input.mouseX = e.clientX;
-      input.mouseY = e.clientY;
+      const pt = window.MobileLandscape
+        ? window.MobileLandscape.toGamePoint(e.clientX, e.clientY)
+        : { x: e.clientX, y: e.clientY };
+      input.mouseX = pt.x;
+      input.mouseY = pt.y;
     }
   });
   window.addEventListener('pointerup', () => {
@@ -1763,9 +1794,12 @@
     const rect = joyZone.getBoundingClientRect();
     const cx = rect.left + rect.width * 0.5;
     const cy = rect.top + rect.height * 0.5;
-    const maxR = rect.width * 0.38;
-    let dx = clientX - cx;
-    let dy = clientY - cy;
+    const maxR = Math.min(rect.width, rect.height) * 0.38 || 44;
+    const mapped = window.MobileLandscape
+      ? window.MobileLandscape.toGameDelta(clientX - cx, clientY - cy)
+      : { dx: clientX - cx, dy: clientY - cy };
+    let dx = mapped.dx;
+    let dy = mapped.dy;
     const dist = Math.hypot(dx, dy);
     if (dist > maxR) {
       dx = (dx / dist) * maxR;

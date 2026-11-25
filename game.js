@@ -148,10 +148,10 @@
     wingPhase: 0
   };
 
-  // Physics constants normalized to 60 FPS (tuned for smooth, forgiving casual play)
-  const GRAVITY = 0.33;
-  const FLAP_IMPULSE = -7.0;
-  const MAX_FALL_SPEED = 8.5;
+  // Physics constants normalized to 60 FPS (dynamically scaled on short mobile landscape screens)
+  let GRAVITY = 0.33;
+  let FLAP_IMPULSE = -7.0;
+  let MAX_FALL_SPEED = 8.5;
 
   let pipes = [];
   let pipeTimer = 0;
@@ -166,16 +166,32 @@
   // --- Responsive Canvas & Scenery Generation ---
   function resizeCanvas() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    viewWidth = window.innerWidth;
-    viewHeight = window.innerHeight;
+    const vp = window.MobileLandscape
+      ? window.MobileLandscape.getViewport()
+      : { width: window.innerWidth, height: window.innerHeight };
+    viewWidth = vp.width;
+    viewHeight = vp.height;
     canvas.width = Math.floor(viewWidth * dpr);
     canvas.height = Math.floor(viewHeight * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    groundHeight = Math.max(60, Math.min(86, viewHeight * 0.1));
-    bird.x = Math.min(viewWidth * 0.28, 180);
+    groundHeight = viewHeight <= 460 ? Math.max(36, Math.round(viewHeight * 0.095)) : Math.max(60, Math.min(86, viewHeight * 0.1));
+    const playH = viewHeight - groundHeight;
+    if (playH < 430) {
+      bird.radius = 13;
+      GRAVITY = 0.27;
+      FLAP_IMPULSE = -5.6;
+      MAX_FALL_SPEED = 7.2;
+    } else {
+      bird.radius = 17;
+      GRAVITY = 0.33;
+      FLAP_IMPULSE = -7.0;
+      MAX_FALL_SPEED = 8.5;
+    }
+
+    bird.x = Math.min(viewWidth * 0.24, 190);
     if (gameState === 'MENU' || gameState === 'READY') {
-      bird.y = (viewHeight - groundHeight) * 0.46;
+      bird.y = playH * 0.46;
     }
     initBackdrop();
   }
@@ -232,14 +248,17 @@
     document.body.setAttribute('data-theme', targetDayBlend > 0.5 ? 'day' : 'night');
   }
 
-  // --- Difficulty Scaling (Friendly & Forgiving) ---
+  // --- Difficulty Scaling (Friendly & Responsive to Landscape Height) ---
   function getDifficultyParams(pts) {
+    const playH = Math.max(260, viewHeight - groundHeight);
+    const hScale = Math.min(1, Math.max(0.68, playH / 520));
     const level = Math.min(8, Math.floor(pts / 12) + 1);
     const speed = Math.min(4.1, 2.35 + pts * 0.02);
-    const gap = Math.max(168, 215 - pts * 0.35);
-    const spawnInterval = Math.max(88, 118 - pts * 0.25); // frames at 60fps
+    const baseGap = Math.max(168, 215 - pts * 0.35);
+    const gap = Math.round(baseGap * hScale);
+    const spawnInterval = Math.max(88, 118 - pts * 0.25);
     const movingChance = pts >= 30 ? Math.min(0.35, (pts - 25) * 0.01) : 0;
-    return { level, speed, gap, spawnInterval, movingChance };
+    return { level, speed, gap, spawnInterval, movingChance, gravity: GRAVITY, flapImpulse: FLAP_IMPULSE, maxFall: MAX_FALL_SPEED };
   }
 
   // --- Medals & Vouchers Logic ---
@@ -427,14 +446,15 @@
   function spawnPipe() {
     const params = getDifficultyParams(score);
     const playHeight = viewHeight - groundHeight;
-    const minTop = 68;
-    const maxTop = Math.max(minTop + 40, playHeight - params.gap - 78);
+    const minTop = playHeight < 430 ? 38 : 68;
+    const bottomMargin = playHeight < 430 ? 42 : 78;
+    const maxTop = Math.max(minTop + 26, playHeight - params.gap - bottomMargin);
 
     let lo = minTop;
     let hi = maxTop;
     if (pipes.length > 0) {
       const prevTop = pipes[pipes.length - 1].baseTop;
-      const maxDelta = 170;
+      const maxDelta = playHeight < 430 ? 115 : 170;
       lo = Math.max(minTop, prevTop - maxDelta);
       hi = Math.min(maxTop, prevTop + maxDelta);
     }
@@ -695,7 +715,7 @@
   function drawBird() {
     const skin = getSelectedSkin();
     const img = skinImages[skin.id];
-    const visR = 23; // Balanced visual size while keeping bird.radius = 17 for forgiving hitbox
+    const visR = viewHeight - groundHeight < 430 ? 18 : 23;
     const wingFlap = Math.sin(bird.wingPhase) * 7;
     const tilt = Math.max(-0.42, Math.min(0.48, bird.rotation * 0.65));
 

@@ -1,0 +1,168 @@
+/* Mobile Automatic Landscape Mode & Compact Horizontal UI Adjustments */
+body.force-landscape {
+  overflow: hidden !important;
+  width: 100%;
+  height: 100%;
+  background: #050712;
+}
+
+body.force-landscape #app,
+body.force-landscape #contraApp {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: var(--landscape-w, 100vh) !important;
+  height: var(--landscape-h, 100vw) !important;
+  transform: translate(-50%, -50%) rotate(90deg) !important;
+  transform-origin: center center !important;
+}
+
+/* Rotate Hint Pill */
+.landscape-hint-pill {
+  position: absolute;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(8, 14, 30, 0.9);
+  border: 1px solid rgba(0, 245, 212, 0.45);
+  color: #f8fafc;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  z-index: 65;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 0 18px rgba(0, 245, 212, 0.3);
+  transition: opacity 0.35s ease;
+}
+
+.landscape-hint-pill.hide {
+  opacity: 0;
+}
+
+/* Compact adjustments when game height is short (mobile landscape ~340px - 460px) */
+body.compact-landscape .hud,
+body.compact-landscape .c-hud {
+  top: 8px;
+  padding: 0 12px;
+}
+
+body.compact-landscape .icon-btn,
+body.compact-landscape .pill-btn,
+body.compact-landscape .c-icon-btn,
+body.compact-landscape .c-pill-btn,
+body.compact-landscape .c-stat-chip {
+  height: 34px;
+  font-size: 0.76rem;
+  border-radius: 10px;
+}
+
+body.compact-landscape .live-score {
+  font-size: 2rem;
+}
+
+body.compact-landscape .glass-card,
+body.compact-landscape .c-card {
+  max-width: 500px;
+  max-height: 92%;
+  padding: 14px 18px;
+  border-radius: 18px;
+}
+
+body.compact-landscape .game-title,
+body.compact-landscape .c-title {
+  font-size: 1.55rem;
+  margin-bottom: 4px;
+}
+
+body.compact-landscape .subtitle,
+body.compact-landscape .c-sub {
+  font-size: 0.78rem;
+  margin-bottom: 8px;
+}
+
+body.compact-landscape .stats-strip,
+body.compact-landscape .c-stats-grid {
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+body.compact-landscape .stat-box,
+body.compact-landscape .c-stat-box {
+  padding: 6px 8px;
+}
+
+body.compact-landscape .primary-btn,
+body.compact-landscape .c-primary-btn {
+  padding: 10px 14px;
+  font-size: 0.86rem;
+}
+
+body.compact-landscape .secondary-btn,
+body.compact-landscape .c-sec-btn {
+  padding: 7px 8px;
+  font-size: 0.76rem;
+}
+
+body.compact-landscape .controls-guide {
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+body.compact-landscape .scoreboard-grid {
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+body.compact-landscape .medal-circle {
+  width: 48px;
+  height: 48px;
+  font-size: 1.4rem;
+}
+
+/* Keep Contra Touch Controls & AI Bar ergonomic in landscape */
+body.compact-landscape .joy-zone {
+  left: 16px;
+  bottom: 14px;
+  width: 114px;
+  height: 114px;
+}
+
+body.compact-landscape .joy-stick {
+  width: 44px;
+  height: 44px;
+}
+
+body.compact-landscape .action-zone {
+  right: 18px;
+  bottom: 16px;
+  gap: 12px;
+}
+
+body.compact-landscape .act-btn {
+  width: 64px;
+  height: 64px;
+  font-size: 0.72rem;
+}
+
+body.compact-landscape .act-btn.fire-btn {
+  width: 74px;
+  height: 74px;
+}
+
+body.compact-landscape .c-ai-bar {
+  bottom: 6px;
+  padding: 4px 10px;
+  gap: 6px;
+  transform: translateX(-50%) scale(0.86);
+  transform-origin: bottom center;
+}
+
+body.compact-landscape .demo-dock {
+  bottom: 6px;
+  padding: 6px 12px;
+  gap: 4px;
+}
