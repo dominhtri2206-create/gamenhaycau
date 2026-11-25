@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>NEON CONTRA — Chiến Dịch Biệt Kích 8 Hướng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="contra.css" />
+</head>
+<body>
+  <div id="contraApp">
+    <canvas id="contraCanvas"></canvas>
+
+    <!-- Top Combat HUD -->
+    <header class="c-hud">
+      <div class="c-hud-left">
+        <a href="index.html" class="c-pill-btn" title="Về Cổng Game">🏠 Cổng Game</a>
+        <div class="c-stat-chip">
+          <span id="hudLives">❤️❤️❤️</span>
+        </div>
+        <div class="c-stat-chip weapon-chip">
+          🔫 <strong id="hudWeapon">M • RIFLE</strong>
+        </div>
+      </div>
+
+      <!-- Center Score & Stage -->
+      <div class="c-hud-center">
+        <div class="c-stage-badge" id="hudStage">STAGE 1</div>
+        <div class="c-score-num" id="hudScore">0</div>
+      </div>
+
+      <div class="c-hud-right">
+        <button id="btnTouchToggle" class="c-icon-btn" title="Hiện / Ẩn nút điều khiển ảo">🕹️</button>
+        <button id="btnContraSound" class="c-icon-btn" title="Bật / Tắt âm thanh">
+          <span id="contraSoundIcon">🔊</span>
+        </button>
+        <button id="btnContraWallet" class="c-pill-btn">
+          🎟️ <span id="contraVoucherCount">0</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Boss HP Bar -->
+    <div id="bossHud" class="boss-hud hidden">
+      <div class="boss-label" id="bossTitle">👾 PHÁO ĐÀI TRÙM — STAGE 1</div>
+      <div class="boss-bar-track">
+        <div id="bossBarFill" class="boss-bar-fill" style="width: 100%"></div>
+      </div>
+    </div>
+
+    <!-- Stage Banner Announcement -->
+    <div id="stageBanner" class="stage-banner hidden">
+      <div id="stageBannerTitle" class="sb-title">STAGE 1</div>
+      <div id="stageBannerSub" class="sb-sub">CHIẾN DỊCH RỪNG ĐÊM NEON</div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="contraToast" class="c-toast hidden">
+      <span class="c-toast-icon">🎁</span>
+      <div>
+        <div id="cToastTitle" class="c-toast-title">Mở khóa Voucher!</div>
+        <div id="cToastDesc" class="c-toast-desc">Giảm 10% hóa đơn</div>
+      </div>
+    </div>
+
+    <!-- AI Auto-Pilot Showcase Bar -->
+    <aside id="contraAiBar" class="c-ai-bar">
+      <div class="c-ai-left">
+        <span id="cAiDot" class="c-ai-dot off"></span>
+        <span id="cAiLabel">CHẾ ĐỘ TỰ CHƠI</span>
+      </div>
+      <div class="c-ai-controls">
+        <button id="btnToggleContraAI" class="c-chip">🤖 Bật AI Phá Đảo</button>
+        <button class="c-chip c-speed active" data-spd="1">1x</button>
+        <button class="c-chip c-speed" data-spd="2">2x</button>
+        <button class="c-chip c-speed" data-spd="4">4x</button>
+        <button id="btnContraEndNow" class="c-chip danger hidden">🏆 Xem Tổng Kết</button>
+      </div>
+    </aside>
+
+    <!-- Mobile / Touch Virtual Controls -->
+    <div id="touchControls" class="touch-controls hidden">
+      <div id="joyZone" class="joy-zone">
+        <div class="joy-ring">
+          <div id="joyStick" class="joy-stick"></div>
+        </div>
+      </div>
+
+      <div class="action-zone">
+        <button id="btnTouchJump" class="act-btn jump-btn">NHẢY</button>
+        <button id="btnTouchFire" class="act-btn fire-btn">BẮN</button>
+      </div>
+    </div>
+
+    <!-- Start Overlay -->
+    <section id="contraStartOverlay" class="c-overlay active">
+      <div class="c-card">
+        <div class="c-tag" id="contraShopTag">✨ NEON CAFE ARCADE</div>
+        <h1 class="c-title">NEON <span>CONTRA</span></h1>
+        <p class="c-sub">
+          Điều khiển biệt kích bắn 8 hướng, săn đạn <strong>Spread (S)</strong>, <strong>Laser (L)</strong>, <strong>Fireball (F)</strong> và tiêu diệt Pháo Đài Trùm cuối màn!
+        </p>
+
+        <div class="controls-guide">
+          <div><kbd>AWSD</kbd> Di chuyển &amp; Ngắm 8 hướng</div>
+          <div><kbd>Space</kbd> Nhảy lên • <kbd>Space + F</kbd> Nhảy tụt xuống bệ dưới</div>
+          <div><kbd>Chuột trái</kbd> / <kbd>J</kbd> Bắn liên thanh • Đổi thưởng: <strong>100đ = 1đ mốc</strong></div>
+        </div>
+
+        <button id="btnContraStart" class="c-primary-btn">🔥 BẮT ĐẦU CHIẾN DỊCH</button>
+
+        <div class="c-row-btns">
+          <button id="btnContraPickChar" class="c-sec-btn">✨ Đổi Nhân Vật</button>
+          <button id="btnContraStartAI" class="c-sec-btn">🤖 Ngồi Xem AI Phá Đảo</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Game Over / Summary Overlay -->
+    <section id="contraOverOverlay" class="c-overlay">
+      <div class="c-card">
+        <h2 class="c-over-title" id="contraOverHeading">KẾT THÚC CHIẾN DỊCH</h2>
+
+        <div class="c-stats-grid">
+          <div class="c-stat-box">
+            <span>ĐIỂM CHIẾN ĐẤU</span>
+            <strong id="cFinalScore">0</strong>
+          </div>
+          <div class="c-stat-box">
+            <span>MÀN ĐẠT ĐƯỢC</span>
+            <strong id="cFinalStage">STAGE 1</strong>
+          </div>
+          <div class="c-stat-box">
+            <span>KỶ LỤC CÁ NHÂN</span>
+            <strong id="cBestScore" style="color:#fbbf24">0</strong>
+          </div>
+          <div class="c-stat-box">
+            <span>ĐIỂM MỐC VOUCHER</span>
+            <strong id="cMilestonePts" style="color:#00f5d4">0đ</strong>
+          </div>
+        </div>
+
+        <div id="cNewVoucherBox" class="c-voucher-box hidden">
+          <div class="cv-head">🎉 MỞ KHÓA VOUCHER MỚI!</div>
+          <div id="cNewVoucherReward" class="cv-reward">Giảm 10% hóa đơn</div>
+          <div class="cv-code-row">
+            <code id="cNewVoucherCode">CF10-XXXX</code>
+            <button id="btnCopyContraVoucher" class="cv-copy">Sao chép</button>
+          </div>
+        </div>
+
+        <button id="btnContraRetry" class="c-primary-btn">🔥 TÁI CHIẾN NGAY</button>
+        <div class="c-row-btns">
+          <a href="index.html" class="c-sec-btn" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🏠 Về Cổng Game</a>
+          <button id="btnOverOpenWallet" class="c-sec-btn">🎟️ Mở Ví Voucher</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Character Selector Modal -->
+    <section id="contraCharModal" class="c-overlay">
+      <div class="c-card" style="text-align:left">
+        <div class="c-modal-head">
+          <h3>👤 CHỌN CHIẾN BINH</h3>
+          <button class="c-close" data-close="contraCharModal">✕</button>
+        </div>
+        <div id="contraCharList" class="c-char-list"></div>
+      </div>
+    </section>
+
+    <!-- Shared Wallet Modal -->
+    <section id="contraWalletModal" class="c-overlay">
+      <div class="c-card" style="text-align:left">
+        <div class="c-modal-head">
+          <h3>🎟️ VÍ VOUCHER ĐÃ NHẬN</h3>
+          <button class="c-close" data-close="contraWalletModal">✕</button>
+        </div>
+        <div id="contraTierList" class="c-wallet-stack" style="margin-bottom:12px"></div>
+        <div id="contraWalletList" class="c-wallet-stack"></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="shared.js"></script>
+  <script src="audio.js"></script>
+  <script src="contra.js"></script>
+</body>
+</html>

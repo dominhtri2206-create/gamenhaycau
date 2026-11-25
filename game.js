@@ -266,6 +266,7 @@
             tierScore: tier.score,
             reward: tier.reward,
             code: generateVoucherCode(shopConfig.codePrefix || 'CF', tier.score),
+            game: 'Neon Flap',
             date: new Date().toLocaleDateString('vi-VN')
           };
           wallet.unshift(newVoucher);

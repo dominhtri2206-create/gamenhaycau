@@ -2,203 +2,200 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>NEON FLAP — Minimalist Arcade & Cafe Rewards</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>NEON CAFE ARCADE — Tổ Hợp Game Đổi Thưởng</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="hub.css" />
 </head>
-<body data-theme="night">
-  <div id="app">
-    <canvas id="gameCanvas"></canvas>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
 
-    <!-- Top HUD -->
-    <header id="hud" class="hud">
-      <div class="hud-left">
-        <button id="btnSound" class="icon-btn" title="Bật / Tắt âm thanh" aria-label="Âm thanh">
-          <span id="soundIcon">🔊</span>
-        </button>
-        <button id="btnThemeQuick" class="icon-btn" title="Đổi chế độ Ngày / Đêm / Tự động" aria-label="Chế độ Ngày Đêm">
-          <span id="themeIcon">🌙</span>
-        </button>
+  <div class="hub-container">
+    <!-- Top Bar -->
+    <header class="hub-topbar">
+      <div class="brand-wrap">
+        <span class="brand-pill" id="hubShopName">✨ NEON CAFE ARCADE</span>
       </div>
-
-      <div id="liveScoreWrap" class="live-score-wrap hidden">
-        <div id="liveScore" class="live-score">0</div>
-        <div id="difficultyBadge" class="difficulty-badge">LV.1</div>
-      </div>
-
-      <div class="hud-right">
-        <button id="btnWallet" class="pill-btn" title="Kho Voucher của bạn">
-          🎟️ <span id="voucherCount">0</span>
+      <div class="topbar-actions">
+        <button id="btnHubSound" class="hub-icon-btn" title="Bật / Tắt âm thanh">
+          <span id="hubSoundIcon">🔊</span>
+        </button>
+        <button id="btnHubWallet" class="hub-wallet-btn">
+          🎟️ Ví Voucher <span id="hubVoucherBadge" class="badge-count">0</span>
+        </button>
+        <button id="btnHubSettings" class="hub-icon-btn" title="Cấu hình quán & Mốc thưởng">
+          ⚙️
         </button>
       </div>
     </header>
 
-    <!-- Toast Notification (Voucher Unlock / Milestone) -->
-    <div id="toast" class="toast hidden" role="status" aria-live="polite">
-      <div class="toast-icon">🎁</div>
-      <div class="toast-body">
-        <div id="toastTitle" class="toast-title">Mở khóa Voucher!</div>
-        <div id="toastDesc" class="toast-desc">Giảm 10% hóa đơn</div>
-      </div>
-    </div>
-
-    <!-- Start / Main Menu Overlay -->
-    <section id="menuScreen" class="overlay active">
-      <div class="glass-card menu-card">
-        <div class="brand-tag" id="shopBrandTag">✨ NEON CAFE ARCADE</div>
-        <h1 class="game-title">NEON<span>FLAP</span></h1>
-        <p class="subtitle">Chạm màn hình hoặc nhấn <kbd>Space</kbd> để bay qua cổng năng lượng</p>
-
-        <div class="stats-strip">
-          <div class="stat-box">
-            <span class="stat-label">ĐIỂM CAO NHẤT</span>
-            <span id="menuBestScore" class="stat-value">0</span>
-          </div>
-          <div class="stat-box">
-            <span class="stat-label">HUY CHƯƠNG</span>
-            <span id="menuBestMedal" class="stat-value">—</span>
-          </div>
-        </div>
-
-        <button id="btnStart" class="primary-btn pulse">
-          <span>BẮT ĐẦU CHƠI</span>
-        </button>
-
-        <div class="menu-actions">
-          <button id="btnOpenSkins" class="secondary-btn">✨ Nhân vật &amp; Ngày/Đêm</button>
-          <button id="btnOpenVouchers" class="secondary-btn">🎟️ Đổi thưởng Voucher</button>
-        </div>
-
-        <button id="btnOpenSettings" class="text-link-btn">⚙️ Cấu hình mốc Voucher quán</button>
-      </div>
+    <!-- Hero Banner -->
+    <section class="hero-section">
+      <h1 class="hero-title">NEON <span>ARCADE</span> HUB</h1>
+      <p class="hero-subtitle">
+        Chọn nhân vật đại diện của bạn, chinh phục các tựa game kinh điển và tích lũy điểm mở khóa <strong>Voucher ưu đãi dùng chung</strong>!
+      </p>
     </section>
 
-    <!-- Get Ready Hint -->
-    <div id="readyOverlay" class="ready-overlay hidden">
-      <div class="ready-title">SẴN SÀNG!</div>
-      <div class="ready-tap">CHẠM HOẶC NHẤN SPACE ĐỂ BAY</div>
-    </div>
+    <!-- Shared Character Picker -->
+    <section class="panel-section">
+      <div class="section-head">
+        <h2>👤 CHỌN NHÂN VẬT ĐẠI DIỆN (ÁP DỤNG MỌI GAME)</h2>
+        <span id="activeCharLabel" class="active-char-tag">Đang chọn: Chiến Binh Cyber</span>
+      </div>
+      <div id="hubCharGrid" class="char-grid"></div>
+    </section>
 
-    <!-- Game Over Overlay -->
-    <section id="gameOverScreen" class="overlay">
-      <div class="glass-card gameover-card">
-        <h2 class="gameover-title">KẾT THÚC</h2>
+    <!-- Games Showcase Grid -->
+    <section class="panel-section">
+      <div class="section-head">
+        <h2>🕹️ KHO TRÒ CHƠI TRÊN HỆ THỐNG</h2>
+        <span class="conversion-note">💡 Tích điểm ở bất kỳ game nào đều mở khóa Voucher chung</span>
+      </div>
 
-        <div class="scoreboard-grid">
-          <div class="medal-slot">
-            <div class="slot-label">HUY CHƯƠNG</div>
-            <div id="medalCircle" class="medal-circle none">
-              <span id="medalEmoji">—</span>
+      <div class="games-grid">
+        <!-- GAME 1: NEON FLAP -->
+        <article class="game-card card-cyan">
+          <div class="game-banner banner-flappy">
+            <div class="banner-pipes">
+              <span class="b-pipe p1"></span>
+              <span class="b-pipe p2"></span>
             </div>
-            <div id="medalName" class="medal-name">Chưa đạt</div>
+            <div class="banner-hero-wrap">
+              <img id="previewFlappyAvatar" src="assets/char1.png" alt="Hero" class="banner-avatar" />
+              <span class="wing-badge">🪽</span>
+            </div>
+            <span class="game-tag">GAME #01 • PHẢN XẠ</span>
           </div>
 
-          <div class="scores-slot">
-            <div class="score-row">
-              <span class="slot-label">ĐIỂM SỐ</span>
-              <span id="finalScore" class="score-num">0</span>
+          <div class="game-body">
+            <div class="game-title-row">
+              <h3>NEON FLAP</h3>
+              <span class="rate-pill">1 ống = 1đ thưởng</span>
             </div>
-            <div class="score-row">
-              <span class="slot-label">KỶ LỤC <span id="newBestBadge" class="new-badge hidden">MỚI!</span></span>
-              <span id="bestScore" class="score-num best">0</span>
+            <p class="game-desc">
+              Bay lượn qua chuỗi cổng năng lượng biến ảo Ngày &amp; Đêm, vượt chướng ngại vật di động tốc độ cao để săn Huy chương Bạch Kim.
+            </p>
+            <div class="feature-chips">
+              <span>🌗 Chu kỳ Ngày/Đêm</span>
+              <span>💎 4 Cấp Huy Chương</span>
+              <span>📱 Chạm 1 ngón</span>
+            </div>
+            <div class="record-bar">
+              <span>🏆 Kỷ lục cá nhân:</span>
+              <strong id="statFlappyBest">0 ống</strong>
+            </div>
+            <div class="card-actions">
+              <a href="flappy.html" class="play-btn cyan-btn">🎮 CHƠI NGAY</a>
+              <a href="flappy.html?autoplay=1" class="watch-btn">🤖 Xem AI Phá Đảo</a>
             </div>
           </div>
-        </div>
+        </article>
 
-        <!-- Newly unlocked voucher banner -->
-        <div id="unlockedVoucherBox" class="voucher-banner hidden">
-          <div class="voucher-banner-header">🎉 BẠN NHẬN ĐƯỢC VOUCHER MỚI!</div>
-          <div id="unlockedVoucherTitle" class="voucher-banner-title">Giảm 15% tổng bill</div>
-          <div class="voucher-code-row">
-            <code id="unlockedVoucherCode">NEON15-XXXX</code>
-            <button id="btnCopyNewVoucher" class="copy-btn">Sao chép</button>
+        <!-- GAME 2: NEON CONTRA -->
+        <article class="game-card card-pink">
+          <div class="game-banner banner-contra">
+            <div class="contra-fx">
+              <span class="bullet-ray r1"></span>
+              <span class="bullet-ray r2"></span>
+              <span class="bullet-ray r3"></span>
+            </div>
+            <div class="banner-hero-wrap contra-hero-preview">
+              <span class="headband-ribbon"></span>
+              <img id="previewContraAvatar" src="assets/char1.png" alt="Commando" class="banner-avatar pink-ring" />
+              <span class="gun-badge">🔫 S</span>
+            </div>
+            <div class="boss-mini">👾 BOSS</div>
+            <span class="game-tag hot-tag">GAME #02 • MỚI!</span>
           </div>
-        </div>
 
-        <!-- Next milestone progress -->
-        <div id="nextMilestoneHint" class="milestone-hint">
-          Đạt <strong>10 điểm</strong> để nhận Huy chương Đồng &amp; Voucher đầu tiên!
-        </div>
-
-        <div class="gameover-actions">
-          <button id="btnRestart" class="primary-btn">CHƠI LẠI</button>
-          <div class="menu-actions">
-            <button id="btnGameOverMenu" class="secondary-btn">🏠 Trang chủ</button>
-            <button id="btnGameOverWallet" class="secondary-btn">🎟️ Ví Voucher</button>
+          <div class="game-body">
+            <div class="game-title-row">
+              <h3>NEON CONTRA</h3>
+              <span class="rate-pill pink">100 điểm = 1đ thưởng</span>
+            </div>
+            <p class="game-desc">
+              Hóa thân chiến binh biệt kích chạy nhảy qua chiến trường, bắn 8 hướng, săn hộp đạn chùm <strong>Spread (S)</strong>, <strong>Laser (L)</strong> và đại chiến Pháo Đài Trùm cuối màn!
+            </p>
+            <div class="feature-chips">
+              <span>🔫 Đạn S / L / F</span>
+              <span>👾 Đấu Trùm Cuối</span>
+              <span>🕹️ Phím &amp; Joystick Ảo</span>
+            </div>
+            <div class="record-bar">
+              <span>🏆 Thành tích cao nhất:</span>
+              <strong id="statContraBest">0 điểm</strong>
+            </div>
+            <div class="card-actions">
+              <a href="contra.html" class="play-btn pink-btn">🔥 CHIẾN NGAY</a>
+              <a href="contra.html?autoplay=1" class="watch-btn">🤖 Xem AI Phá Đảo</a>
+            </div>
           </div>
-        </div>
-      </div>
-    </section>
+        </article>
 
-    <!-- Skins & Day/Night Modal -->
-    <section id="skinModal" class="overlay modal-overlay">
-      <div class="glass-card modal-card">
-        <div class="modal-header">
-          <h3>✨ TÙY CHỈNH GIAO DIỆN</h3>
-          <button class="close-btn" data-close="skinModal">✕</button>
-        </div>
-
-        <div class="section-label">CHỌN NHÂN VẬT (SKIN)</div>
-        <div id="skinGrid" class="skin-grid"></div>
-
-        <div class="section-label">CHẾ ĐỘ ÁNH SÁNG</div>
-        <div class="theme-selector" id="themeSelector">
-          <button class="theme-opt" data-mode="night">🌙 Đêm Neon</button>
-          <button class="theme-opt" data-mode="day">☀️ Ngày Tối Giản</button>
-          <button class="theme-opt" data-mode="auto">🌗 Tự động đổi</button>
-        </div>
-        <p class="helper-note">Ở chế độ Tự động, bầu trời chuyển đổi mượt mà giữa Ngày &amp; Đêm mỗi 15 điểm.</p>
-      </div>
-    </section>
-
-    <!-- Voucher Wallet & Tiers Modal -->
-    <section id="voucherModal" class="overlay modal-overlay">
-      <div class="glass-card modal-card">
-        <div class="modal-header">
-          <h3>🎟️ VOUCHER &amp; MỐC THƯỞNG</h3>
-          <button class="close-btn" data-close="voucherModal">✕</button>
-        </div>
-
-        <div class="section-label">MỐC ĐIỂM NHẬN QUÀ</div>
-        <div id="tierList" class="tier-list"></div>
-
-        <div class="section-label">VÍ VOUCHER ĐÃ NHẬN</div>
-        <div id="walletList" class="wallet-list"></div>
-      </div>
-    </section>
-
-    <!-- Cafe Owner Settings Modal -->
-    <section id="settingsModal" class="overlay modal-overlay">
-      <div class="glass-card modal-card">
-        <div class="modal-header">
-          <h3>⚙️ CẤU HÌNH QUÁN / SỰ KIỆN</h3>
-          <button class="close-btn" data-close="settingsModal">✕</button>
-        </div>
-        <form id="settingsForm" class="settings-form">
-          <label class="field-label">
-            Tên quán / thương hiệu hiển thị
-            <input type="text" id="inputShopName" maxlength="32" placeholder="VD: NEON COFFEE" required />
-          </label>
-          <label class="field-label">
-            Tiền tố mã Voucher
-            <input type="text" id="inputCodePrefix" maxlength="10" placeholder="VD: CF" required />
-          </label>
-          <div class="section-label">CÁC MỐC ĐIỂM &amp; PHẦN THƯỞNG</div>
-          <div id="tierSettingsInputs" class="tier-settings-inputs"></div>
-
-          <div class="settings-actions">
-            <button type="submit" class="primary-btn">LƯU CẤU HÌNH</button>
-            <button type="button" id="btnResetData" class="danger-btn">Xóa kỷ lục &amp; ví</button>
+        <!-- GAME 3: COMING SOON SLOT -->
+        <article class="game-card card-coming">
+          <div class="coming-inner">
+            <div class="coming-icon">🚀</div>
+            <h3>GAME #03 — SẮP RA MẮT</h3>
+            <p>Hệ thống Cổng Game đã sẵn sàng mở rộng thêm các trò chơi mới (Rắn Săn Mồi Neon, Bắn Tàu Không Gian, Xếp Hình...) dùng chung nhân vật &amp; Ví Voucher.</p>
           </div>
-        </form>
+        </article>
       </div>
     </section>
   </div>
 
+  <!-- Shared Voucher Wallet Modal -->
+  <section id="hubVoucherModal" class="hub-modal">
+    <div class="hub-modal-card">
+      <div class="modal-head">
+        <h3>🎟️ VÍ VOUCHER &amp; MỐC ĐỔI THƯỞNG CHUNG</h3>
+        <button class="modal-close" data-close="hubVoucherModal">✕</button>
+      </div>
+      <p class="modal-sub">1 ống <strong>Neon Flap</strong> hoặc 100 điểm <strong>Neon Contra</strong> = <strong>1 Điểm Thưởng</strong>.</p>
+
+      <div class="sub-label">CÁC MỐC NHẬN VOUCHER</div>
+      <div id="hubTierList" class="tier-stack"></div>
+
+      <div class="sub-label">MÃ VOUCHER ĐÃ MỞ KHÓA</div>
+      <div id="hubWalletList" class="wallet-stack"></div>
+    </div>
+  </section>
+
+  <!-- Shared Shop Settings Modal -->
+  <section id="hubSettingsModal" class="hub-modal">
+    <div class="hub-modal-card">
+      <div class="modal-head">
+        <h3>⚙️ CẤU HÌNH QUÁN / SỰ KIỆN</h3>
+        <button class="modal-close" data-close="hubSettingsModal">✕</button>
+      </div>
+      <form id="hubSettingsForm" class="settings-stack">
+        <label>
+          Tên quán / thương hiệu hiển thị
+          <input type="text" id="hubInputShopName" maxlength="32" required />
+        </label>
+        <label>
+          Tiền tố mã Voucher
+          <input type="text" id="hubInputPrefix" maxlength="10" required />
+        </label>
+        <div class="sub-label">MỐC ĐIỂM THƯỞNG &amp; ƯU ĐÃI</div>
+        <div id="hubTierInputs" class="tier-inputs"></div>
+
+        <button type="submit" class="play-btn cyan-btn" style="width:100%;border:none;cursor:pointer">LƯU CẤU HÌNH TOÀN HỆ THỐNG</button>
+        <button type="button" id="btnHubReset" class="reset-btn">Xóa toàn bộ kỷ lục &amp; ví voucher</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Toast -->
+  <div id="hubToast" class="hub-toast hidden"></div>
+
+  <script src="shared.js"></script>
   <script src="audio.js"></script>
-  <script src="game.js"></script>
+  <script src="hub.js"></script>
 </body>
 </html>
